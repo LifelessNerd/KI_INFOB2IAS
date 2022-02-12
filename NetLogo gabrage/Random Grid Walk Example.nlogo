@@ -20,8 +20,8 @@ end
 
 to walk1
   ask turtles [
-    face one-of neighbors4              ;; face N, E, S, or W
-    set pcolor scale-color pcolor 10 12 0
+    face one-of neighbors4 with [pcolor = black] or [pcolor = color]       ;; face N, E, S, or W
+    set pcolor scale-color color 25 0 100
     forward 1                       ;; advance one step
   ]
   tick

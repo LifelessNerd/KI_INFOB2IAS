@@ -1,52 +1,60 @@
-patches-own [visits owner owned]
+patches-own [visits owner]              ;; Stap 10: Bezoekteller per patch, owner
 
 to setup
   clear-all
-  create-turtles 3                           ;; create one turtle
+  create-turtles numtur                 ;; Stap 3: Meerdere turtles
   [
+                                        ;; Geef geen random color maar uit lijst
     set color item (who mod 6) [red green blue orange yellow brown]
-    set size 3                          ;; make it easier to see
-    face one-of neighbors4              ;; face N, E, S, or W
-    move-to one-of patches
-
+    move-to one-of patches              ;; Stap 4: Begin op willekeurige patch
+    set size 2                          ;; make it easier to see
+    face one-of neighbors4              ;; face random N, E, S, or W: ensure orthogonality
+    create-temporary-plot-pen (word "T" who)  ;; Stap 8: elk een eigen pen
+    ;;set-current-plot-pen (word "T" who)  ;; current is nu de laatst aangemaakte!
+    set-plot-pen-color color            ;; Stap 8: Plot in turtle kleur
   ]
-  ask patches [
-    set visits 0
-
-  ]
+  ask patches
+  [ set visits 0                        ;; set patches unvisited
+    set owner numtur ]                  ;; and unowned
   reset-ticks
 end
 
+
 to walk1
-  ask turtles [
-    face one-of neighbors4 with [pcolor = black or pcolor = [color] of myself]       ;;face N, E, S, or W
-
-
-
-
-    set pcolor color
-    set visits visits + 1
-    set owned true
-    forward 1                       ;; advance one step
-    if (any? patches with [pcolor = black]) [stop]
+  ask turtles [                         ;; Is there turtle-atomicity here?
+                                        ;; Otherwise, can two enter the same patch?
+                                        ;; I haven't observed this
+    if [pcolor] of patch-ahead 1 != black  ;; Stap 9: rechtdoor als volgende zwart is
+    [ face min-one-of neighbors4        ;; Stap 6: Alleen zwarte of eigen tegels kiezen
+                      with [owner =  [who] of myself or pcolor = black ]
+           [visits]                     ;; Stap 11: Samen met de MIN-one-of
+    ]
+    forward 1
+    set owner who                       ;; deze tegel is van mij
+    set visits visits + 1               ;; visits ophogen
+                                        ;; kleurtint afh. van bezoek
+    set pcolor scale-color color ((log visits 2) + 3) 0 10
+    set-current-plot-pen (word "T" who) ;; Switch naar mijn pen
+                                        ;; en plot hoeveel tegels ik heb
+    plot count patches with [owner = [who] of myself]
+  ]
+  if (not any? patches with [owner = numtur]) ;; Stap 7: Game over
+  [ ask max-one-of turtles              ;; Stap 13: Winnaar heeft meeste tegels
+    [ count patches with [owner = [who] of myself ] ]
+    [ set size 4 ]                      ;; Stap 13: Winnaar wordt groter
+    stop                                ;; Stap 7: Stop
   ]
   tick
 end
-
-
-
-; Public Domain:
-; To the extent possible under law, Uri Wilensky has waived all
-; copyright and related or neighboring rights to this model.
 @#$#@#$#@
 GRAPHICS-WINDOW
-189
+210
 10
-648
-470
+647
+448
 -1
 -1
-11.0
+13.0
 1
 10
 1
@@ -56,21 +64,36 @@ GRAPHICS-WINDOW
 1
 1
 1
--20
-20
--20
-20
+-16
+16
+-16
+16
 0
 0
 1
 ticks
 30.0
 
+SLIDER
+60
+107
+232
+140
+numtur
+numtur
+0
+100
+18.0
+1
+1
+NIL
+HORIZONTAL
+
 BUTTON
-63
-43
-130
-76
+74
+22
+137
+55
 NIL
 setup
 NIL
@@ -84,10 +107,10 @@ NIL
 1
 
 BUTTON
-50
-84
-142
-117
+61
+67
+124
+100
 NIL
 walk1
 T
@@ -98,14 +121,14 @@ NIL
 NIL
 NIL
 NIL
-0
+1
 
 PLOT
-708
-44
-908
-194
-plot
+704
+69
+904
+219
+t
 NIL
 NIL
 0.0
@@ -116,28 +139,44 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot count visits"
+"default" 1.0 0 -16777216 true "" "plot count turtles"
 
 @#$#@#$#@
 ## WHAT IS IT?
 
-This code example is a demo of a basic random walk, constrained to lie on a grid.  At each step, the yellow turtle changes its heading randomly, but always in multiples of 90, so the turtle is always facing due north, east, south, or west.  At each step, the turtle always lands on the center of a patch.
+(a general understanding of what the model is trying to show or explain)
 
-Two slightly different kinds of walk are demonstrated:
+## HOW IT WORKS
 
-- In WALK1, the turtle's heading at each time step is completely random.
+(what rules the agents use to create the overall behavior of the model)
 
-- In WALK2, the turtle never makes an immediate about face (180 degree turn). Thus, it will tend to proceed in one direction for longer.  This is more similar to how a person or animal might wander.
+## HOW TO USE IT
+
+(how to use the model, including a description of each of the items in the Interface tab)
 
 ## THINGS TO NOTICE
 
-The monitors show that the turtle's xcor and ycor are always exact multiples of 1.0.  That means that the turtle is always on a patch center.
+(suggested things for the user to notice while running the model)
+
+## THINGS TO TRY
+
+(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
+
+## EXTENDING THE MODEL
+
+(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
+
+## NETLOGO FEATURES
+
+(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
 
 ## RELATED MODELS
 
-Random Walk Example - shows a freer random walk which does not follow a grid
+(models in the NetLogo Models Library and elsewhere which are of related interest)
 
-<!-- 2006 -->
+## CREDITS AND REFERENCES
+
+(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
 @#$#@#$#@
 default
 true
@@ -331,6 +370,22 @@ Polygon -7500403 true true 135 105 90 60 45 45 75 105 135 135
 Polygon -7500403 true true 165 105 165 135 225 105 255 45 210 60
 Polygon -7500403 true true 135 90 120 45 150 15 180 45 165 90
 
+sheep
+false
+15
+Circle -1 true true 203 65 88
+Circle -1 true true 70 65 162
+Circle -1 true true 150 105 120
+Polygon -7500403 true false 218 120 240 165 255 165 278 120
+Circle -7500403 true false 214 72 67
+Rectangle -1 true true 164 223 179 298
+Polygon -1 true true 45 285 30 285 30 240 15 195 45 210
+Circle -1 true true 3 83 150
+Rectangle -1 true true 65 221 80 296
+Polygon -1 true true 195 285 210 285 210 240 240 210 195 210
+Polygon -7500403 true false 276 85 285 105 302 99 294 83
+Polygon -7500403 true false 219 85 210 105 193 99 201 83
+
 square
 false
 0
@@ -415,6 +470,13 @@ Line -7500403 true 40 84 269 221
 Line -7500403 true 40 216 269 79
 Line -7500403 true 84 40 221 269
 
+wolf
+false
+0
+Polygon -16777216 true false 253 133 245 131 245 133
+Polygon -7500403 true true 2 194 13 197 30 191 38 193 38 205 20 226 20 257 27 265 38 266 40 260 31 253 31 230 60 206 68 198 75 209 66 228 65 243 82 261 84 268 100 267 103 261 77 239 79 231 100 207 98 196 119 201 143 202 160 195 166 210 172 213 173 238 167 251 160 248 154 265 169 264 178 247 186 240 198 260 200 271 217 271 219 262 207 258 195 230 192 198 210 184 227 164 242 144 259 145 284 151 277 141 293 140 299 134 297 127 273 119 270 105
+Polygon -7500403 true true -1 195 14 180 36 166 40 153 53 140 82 131 134 133 159 126 188 115 227 108 236 102 238 98 268 86 269 92 281 87 269 103 269 113
+
 x
 false
 0
@@ -423,8 +485,6 @@ Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
 NetLogo 6.2.2
 @#$#@#$#@
-setup
-repeat 2500 [ walk1 ]
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

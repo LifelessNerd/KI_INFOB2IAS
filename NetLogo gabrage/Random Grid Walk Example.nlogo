@@ -1,4 +1,4 @@
-patches-own [visits owner owned]
+patches-own [visits owner turtlenum]
 
 to setup
   clear-all
@@ -12,6 +12,7 @@ to setup
   ]
   ask patches [
     set visits 0
+    set owner turtlenum
 
   ]
   reset-ticks
@@ -26,10 +27,13 @@ to walk1
 
     set pcolor color
     set visits visits + 1
-    set owned true
+    set owner who
+
     forward 1                       ;; advance one step
-    if (any? patches with [pcolor = black]) [stop]
   ]
+
+  if not any? patches with [pcolor = black] [stop] ; werkt nu
+
   tick
 end
 
@@ -116,7 +120,6 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot count visits"
 
 @#$#@#$#@
 ## WHAT IS IT?

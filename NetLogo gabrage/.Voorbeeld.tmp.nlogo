@@ -24,7 +24,7 @@ to walk1
                                         ;; Otherwise, can two enter the same patch?
                                         ;; I haven't observed this
     if [pcolor] of patch-ahead 1 != black  ;; Stap 9: rechtdoor als volgende zwart is
-    [ face min-one-of neighbors4        ;; Stap 6: Alleen zwarte of eigen tegels kiezen
+    [ face min-one-of neighbors4
                       with [owner =  [who] of myself or pcolor = black ]
            [visits]                     ;; Stap 11: Samen met de MIN-one-of
     ]
@@ -74,10 +74,10 @@ ticks
 30.0
 
 SLIDER
-60
-107
-232
-140
+0
+116
+172
+149
 numtur
 numtur
 0
@@ -123,10 +123,10 @@ NIL
 1
 
 PLOT
-704
-69
-904
-219
+7
+170
+207
+320
 t
 NIL
 NIL

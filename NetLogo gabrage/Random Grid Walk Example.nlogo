@@ -1,13 +1,17 @@
-patches-own [visits owner turtlenum]
+patches-own [visits owner]
 
 to setup
   clear-all
-  create-turtles 3                           ;; create one turtle
+  create-turtles turtlenum                           ;; create one turtle
   [
-    set color item (who mod 6) [red green blue orange yellow brown]
+
+    set color 3 + 5 * who
     set size 3                          ;; make it easier to see
     face one-of neighbors4              ;; face N, E, S, or W
     move-to one-of patches
+
+    create-temporary-plot-pen (word "plot" who)
+    set-plot-pen-color color
 
   ]
   ask patches [
@@ -20,37 +24,42 @@ end
 
 to walk1
   ask turtles [
-    face one-of neighbors4 with [pcolor = black or pcolor = [color] of myself]       ;;face N, E, S, or W
+    set pcolor scale-color (color - 1)  (sqrt (visits + 1)) 0 5
 
+    ;;if [pcolor] of neighbors4 != black and not shade-of? pcolor [color] of myself [
+      ;;stop
 
+    ;;]
+    if [pcolor] of patch-ahead 1 != black [
+      face min-one-of neighbors4 with [shade-of? pcolor [color] of myself or shade-of? pcolor black] [visits]
+      forward 1
+    ]
+    if [pcolor] of patch-ahead 1 = black [forward 1]
 
-
-    set pcolor color
     set visits visits + 1
     set owner who
 
-    forward 1                       ;; advance one step
+                           ;; advance one step
+
+    set-current-plot-pen (word "plot" who)
+    plot count patches with [owner = [who] of myself]
+
+
   ]
 
   if not any? patches with [pcolor = black] [stop] ; werkt nu
 
   tick
 end
-
-
-
-; Public Domain:
-; To the extent possible under law, Uri Wilensky has waived all
-; copyright and related or neighboring rights to this model.
 @#$#@#$#@
 GRAPHICS-WINDOW
-189
+210
 10
-648
-470
+830
+631
 -1
 -1
-11.0
+14.95122
 1
 10
 1
@@ -105,10 +114,10 @@ NIL
 0
 
 PLOT
-708
-44
-908
-194
+0
+477
+200
+627
 plot
 NIL
 NIL
@@ -121,26 +130,36 @@ false
 "" ""
 PENS
 
+SLIDER
+10
+150
+182
+183
+turtlenum
+turtlenum
+0
+15
+15.0
+1
+1
+NIL
+HORIZONTAL
+
 @#$#@#$#@
 ## WHAT IS IT?
 
-This code example is a demo of a basic random walk, constrained to lie on a grid.  At each step, the yellow turtle changes its heading randomly, but always in multiples of 90, so the turtle is always facing due north, east, south, or west.  At each step, the turtle always lands on the center of a patch.
+Modificatie van random grid walk example.
+Klik op setup en gebruik de slider om hoeveelheid turtles te spawnen.
+Gebruik walk om de simulatie te starten.
 
-Two slightly different kinds of walk are demonstrated:
+## FEATURES
+-Random colors
+-Heatmap (Hoe witter een patch is hoe vaker deze bezocht is, we hebben gebruik gemaakt van een wortelfunctie, waarin we het aantal visits hebben verwerkt, zodat er bij de eerste visit duidelijker te zien is wanneer deze bezocht is)
+-Turtles lopen rechtdoor zolang ze dit kunnen
+-Turtles kunnen over zwarte patches en zichzelf lopen, niet over anderen
+-Een grafiek is zichtbaar om te laten zien welke van de turtles het meeste grondgebied in bezit heeft
 
-- In WALK1, the turtle's heading at each time step is completely random.
-
-- In WALK2, the turtle never makes an immediate about face (180 degree turn). Thus, it will tend to proceed in one direction for longer.  This is more similar to how a person or animal might wander.
-
-## THINGS TO NOTICE
-
-The monitors show that the turtle's xcor and ycor are always exact multiples of 1.0.  That means that the turtle is always on a patch center.
-
-## RELATED MODELS
-
-Random Walk Example - shows a freer random walk which does not follow a grid
-
-<!-- 2006 -->
+<!-- 2022 -->
 @#$#@#$#@
 default
 true

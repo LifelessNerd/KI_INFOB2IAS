@@ -1,10 +1,10 @@
-globals [circlelist]
+globals [circlelistet]
 turtles-own [stappenteller]
 
 to setup
   clear-all
   ask patches [set pcolor brown]
-  set-patch-size 1.8
+  set-patch-size 2
 
   set circlelist [[225 -82 30] [-227  -82 33] [-92  -22 26] [-147 98 36] [ 82  -25 25][ -61 -69 24] [ 211 -122 28] [ 77 -109 33] [-111 -7 39] [-28 -141 39][-220 -58 29] [-181 -102 23] [ 93   73 37] [ 166 19 31] [110   18 26][ 227 -61 28] [ 28   145 28] [  8  104 37] [ 133 57 36] [ 84 -144 37]]
 
@@ -22,36 +22,46 @@ to setup
     set size 50
     set color cyan
     move-to patch -72 61
-    set heading who * 30
+    set heading who * 32.7
     ]
 
+  ask turtles [pen-down]
 
   reset-ticks
   print count patches with [ pcolor = black ]
 end
 
 to start
+ask turtles[
+    if not can-move? 1 [
+    ;Kan je niet meer bewegen? probeer te splitsen
+      hatch 1 [ lt 45 fd 1]
 
 
-
+      stop
+    ]
+    if [pcolor] of patch-ahead 1 = black or [pcolor] of patch-ahead 1 = cyan[
+      forward 1
+    ]
+  ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-190
-11
-1027
-561
+187
+10
+1117
+621
 -1
 -1
-1.8
+2.0
 1
 10
 1
 1
 1
 0
-1
-1
+0
+0
 1
 -230
 230
@@ -79,6 +89,53 @@ NIL
 NIL
 NIL
 1
+
+BUTTON
+64
+92
+127
+125
+NIL
+start
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+9
+133
+181
+166
+alfahoek
+alfahoek
+-180
+180
+0.0
+10
+1
+NIL
+HORIZONTAL
+
+SLIDER
+9
+174
+181
+207
+betahoek
+betahoek
+-180
+180
+0.0
+10
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?

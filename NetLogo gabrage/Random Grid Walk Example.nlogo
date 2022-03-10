@@ -1,22 +1,21 @@
-patches-own [visits owner]
+patches-own [visits owner]                ;;Declareer visits en een owner op een patch
 
 to setup
   clear-all
-  create-turtles turtlenum                           ;; create one turtle
+  create-turtles turtlenum                           ;; Maakt turtles op basis van slider
   [
 
-    set color 3 + 5 * who
-    set size 3                          ;; make it easier to see
-    face one-of neighbors4              ;; face N, E, S, or W
-    move-to one-of patches
+    set color 3 + 5 * who               ;;Kleuren op basis van WHO-ID
+    set size 3                          ;;Grotere turtles
+    face one-of neighbors4              ;;Turtles kunnen alleen maar naar N,O,Z & W
+    move-to one-of patches              ;;Randomise locatie
 
-    create-temporary-plot-pen (word "plot" who)
-    set-plot-pen-color color
+    create-temporary-plot-pen (word "plot" who) ;;Plot pen maken
+    set-plot-pen-color color                    ;;Pen kleur is altijd gelijk aan turtle kleur
 
   ]
   ask patches [
-    set visits 0
-    set owner turtlenum
+    set visits 0               ;;Alle patches zijn hebben aan het begin 0 visits
 
   ]
   reset-ticks
@@ -24,30 +23,24 @@ end
 
 to walk1
   ask turtles [
-    set pcolor scale-color (color - 1)  (sqrt (visits + 1)) 0 5
-
-    ;;if [pcolor] of neighbors4 != black and not shade-of? pcolor [color] of myself [
-      ;;stop
-
-    ;;]
-    if [pcolor] of patch-ahead 1 != black [
+    set pcolor scale-color (color - 1)  (sqrt (visits + 1)) 0 5   ;;Kleur van patches (zie docs)
+    if [pcolor] of patch-ahead 1 != black [                       ;;Als turtle niet vooruit kan, kies een andere neighbor met eigen kleur of zwart
       face min-one-of neighbors4 with [shade-of? pcolor [color] of myself or shade-of? pcolor black] [visits]
       forward 1
+      set pcolor scale-color (color - 1)  (sqrt (visits + 1)) 0 5 ;;Voor zekerheid na turn inkleuren (TODO: bug)
     ]
-    if [pcolor] of patch-ahead 1 = black [forward 1]
+    if [pcolor] of patch-ahead 1 = black [forward 1]              ;;Als ze vooruit kunnen, gewoon doen
 
-    set visits visits + 1
-    set owner who
+    set visits visits + 1                   ;;Visits aanpassen
+    set owner who                           ;;Van wie de patch is aanpssen met owner, handig voor plot later
 
-                           ;; advance one step
-
-    set-current-plot-pen (word "plot" who)
-    plot count patches with [owner = [who] of myself]
+    set-current-plot-pen (word "plot" who)                     ;;plotpen aanpssen aan de turtle die op dit moment berekend wordt
+    plot count patches with [owner = [who] of myself]          ;;Tel patches voor de turtle en display deze op plot
 
 
   ]
 
-  if not any? patches with [pcolor = black] [stop] ; werkt nu
+  if not any? patches with [pcolor = black] [stop] ;;Als alle zwarte patches weg zijn is het spel klaar
 
   tick
 end
@@ -55,8 +48,8 @@ end
 GRAPHICS-WINDOW
 210
 10
-830
-631
+831
+632
 -1
 -1
 14.95122
@@ -119,8 +112,8 @@ PLOT
 200
 627
 plot
-NIL
-NIL
+time
+Patches
 0.0
 10.0
 0.0
@@ -151,6 +144,7 @@ HORIZONTAL
 Modificatie van random grid walk example.
 Klik op setup en gebruik de slider om hoeveelheid turtles te spawnen.
 Gebruik walk om de simulatie te starten.
+In de grafiek zijn de hoeveelheid patches per turtle te zien.
 
 ## FEATURES
 -Random colors

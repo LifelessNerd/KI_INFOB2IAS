@@ -2,8 +2,7 @@ patches-own [visits owner]
 
 to setup
   clear-all
-  create-turtles turtlenum                           ;; create one turtle
-  [
+
 
     set color 3 + 5 * who
     set size 3                          ;; make it easier to see
@@ -55,8 +54,8 @@ end
 GRAPHICS-WINDOW
 210
 10
-830
-631
+831
+632
 -1
 -1
 14.95122
@@ -154,15 +153,12 @@ Gebruik walk om de simulatie te starten.
 
 ## FEATURES
 -Random colors
--Heatmap (How witter een patch is hoe vaker deze bezocht is, we hebben gebruik gemaakt van een wortelfuntie, waarin we het aantal visits hebben verwerkt, zodat er bij de eerste visit duidelijker te zien is wanneer deze bezocht is)
+-Heatmap (Hoe witter een patch is hoe vaker deze bezocht is, we hebben gebruik gemaakt van een wortelfunctie, waarin we het aantal visits hebben verwerkt, zodat er bij de eerste visit duidelijker te zien is wanneer deze bezocht is)
 -Turtles lopen rechtdoor zolang ze dit kunnen
--Turtles kunnen over zwarte patches en zichzelf lopen, niet over ander
+-Turtles kunnen over zwarte patches en zichzelf lopen, niet over anderen
+-Een grafiek is zichtbaar om te laten zien welke van de turtles het meeste grondgebied in bezit heeft
 
-## RELATED MODELS
-
-Random Walk Example - shows a freer random walk which does not follow a grid
-
-<!-- 2006 -->
+<!-- 2022 -->
 @#$#@#$#@
 default
 true

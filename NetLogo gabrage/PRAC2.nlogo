@@ -1,59 +1,49 @@
-patches-own [visits owner]              ;; Stap 10: Bezoekteller per patch, owner
+globals [circlelist]
+turtles-own [stappenteller]
 
 to setup
   clear-all
-  create-turtles numtur                 ;; Stap 3: Meerdere turtles
-  [
-                                        ;; Geef geen random color maar uit lijst
-    set color item (who mod 6) [red green blue orange yellow brown]
-    move-to one-of patches              ;; Stap 4: Begin op willekeurige patch
-    set size 2                          ;; make it easier to see
-    face one-of neighbors4              ;; face random N, E, S, or W: ensure orthogonality
-    create-temporary-plot-pen (word "T" who)  ;; Stap 8: elk een eigen pen
-    set-plot-pen-color color            ;; Stap 8: Plot in turtle kleur
-  ]
-  ask patches
-  [ set visits 0                        ;; set patches unvisited
-    set owner numtur ]                  ;; and unowned
+  ask patches [set pcolor brown]
+  set-patch-size 1.8
+
+  set circlelist [[225 -82 30] [-227  -82 33] [-92  -22 26] [-147 98 36] [ 82  -25 25][ -61 -69 24] [ 211 -122 28] [ 77 -109 33] [-111 -7 39] [-28 -141 39][-220 -58 29] [-181 -102 23] [ 93   73 37] [ 166 19 31] [110   18 26][ 227 -61 28] [ 28   145 28] [  8  104 37] [ 133 57 36] [ 84 -144 37]]
+
+  ask patch 0 0 [ask patches in-radius 230 [set pcolor black]]
+
+  foreach circlelist [circle-coordinate ->
+    let x item 0 circle-coordinate
+    let y item 1 circle-coordinate
+    let r item 2 circle-coordinate
+      ask patch x y  [ask patches in-radius r [set pcolor brown]
+      ]
+    ]
+
+    create-turtles 11 [
+    set size 50
+    set color cyan
+    move-to patch -72 61
+    set heading who * 30
+    ]
+
+
   reset-ticks
+  print count patches with [ pcolor = black ]
 end
 
+to start
 
-to walk1
-  ask turtles [                         ;; Is there turtle-atomicity here?
-                                        ;; Otherwise, can two enter the same patch?
-                                        ;; I haven't observed this
-    if [pcolor] of patch-ahead 1 != black  ;; Stap 9: rechtdoor als volgende zwart is
-    [ face min-one-of neighbors4        ;; Stap 6: Alleen zwarte of eigen tegels kiezen
-                      with [owner =  [who] of myself or pcolor = black ]
-           [visits]                     ;; Stap 11: Samen met de MIN-one-of
-    ]
-    forward 1
-    set owner who                       ;; deze tegel is van mij
-    set visits visits + 1               ;; visits ophogen
-                                        ;; kleurtint afh. van bezoek
-    set pcolor scale-color color ((log visits 2) + 3) 0 10
-    set-current-plot-pen (word "T" who) ;; Switch naar mijn pen
-                                        ;; en plot hoeveel tegels ik heb
-    plot count patches with [owner = [who] of myself]
-  ]
-  if (not any? patches with [owner = numtur]) ;; Stap 7: Game over
-  [ ask max-one-of turtles              ;; Stap 13: Winnaar heeft meeste tegels
-    [ count patches with [owner = [who] of myself ] ]
-    [ set size 4 ]                      ;; Stap 13: Winnaar wordt groter
-    stop                                ;; Stap 7: Stop
-  ]
-  tick
+
+
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
-10
-647
-448
+190
+11
+1027
+561
 -1
 -1
-13.0
+1.8
 1
 10
 1
@@ -63,36 +53,21 @@ GRAPHICS-WINDOW
 1
 1
 1
--16
-16
--16
-16
+-230
+230
+-150
+150
 0
 0
 1
 ticks
 30.0
 
-SLIDER
-0
-116
-172
-149
-numtur
-numtur
-0
-100
-18.0
-1
-1
-NIL
-HORIZONTAL
-
 BUTTON
-74
-22
-137
-55
+64
+49
+127
+82
 NIL
 setup
 NIL
@@ -104,41 +79,6 @@ NIL
 NIL
 NIL
 1
-
-BUTTON
-61
-67
-124
-100
-NIL
-walk1
-T
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-PLOT
-7
-170
-207
-320
-t
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot count turtles"
 
 @#$#@#$#@
 ## WHAT IS IT?

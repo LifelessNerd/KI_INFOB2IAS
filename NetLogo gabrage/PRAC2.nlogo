@@ -1,4 +1,4 @@
-globals [circlelistet]
+globals [circlelist]
 turtles-own [stappenteller]
 
 to setup
@@ -19,7 +19,7 @@ to setup
     ]
 
     create-turtles 11 [
-    set size 50
+    set size 1
     set color cyan
     move-to patch -72 61
     set heading who * 32.7
@@ -32,15 +32,33 @@ to setup
 end
 
 to start
-ask turtles[
-    if not can-move? 1 [
-    ;Kan je niet meer bewegen? probeer te splitsen
-      hatch 1 [ lt 45 fd 1]
+ask turtles [
+    ;Situatie: turtle loopt vast: dan maar kind maken
+    if not can-move? patchaheaddistance [
+      hatch 1 [
+      lt random 360
+      fd 1
+      set stappenteller 0
+      ]
 
-
+      ;hoort hier eigk niet maar anders loopt t progrtamma vast
       stop
     ]
-    if [pcolor] of patch-ahead 1 = black or [pcolor] of patch-ahead 1 = cyan[
+    ;Te lang rechtdoor gelopen, is saai: ga maar splitsen
+    if stappenteller > hatch-modulus [
+      hatch 1 [
+      lt random 360
+      fd 1
+      set stappenteller 0
+      ]
+
+      die
+    ]
+    ;Normale situatie, plek om vooruit te gaan
+    if [pcolor] of patch-ahead patchaheaddistance = black [;or [pcolor] of patch-ahead patchaheaddistance = cyan [
+      set pcolor color
+      set stappenteller stappenteller + 1
+      print stappenteller
       forward 1
     ]
   ]
@@ -133,6 +151,36 @@ betahoek
 180
 0.0
 10
+1
+NIL
+HORIZONTAL
+
+SLIDER
+9
+214
+181
+247
+hatch-modulus
+hatch-modulus
+0
+100
+100.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+10
+255
+182
+288
+patchaheaddistance
+patchaheaddistance
+0
+25
+10.0
+1
 1
 NIL
 HORIZONTAL
@@ -496,5 +544,5 @@ true
 Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
 @#$#@#$#@
-0
+1
 @#$#@#$#@

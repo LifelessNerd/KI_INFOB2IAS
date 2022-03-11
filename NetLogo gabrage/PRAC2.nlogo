@@ -23,7 +23,7 @@ to setup
   ;^ Van list met cirkels naar een daadwerkelijke cirkels die bruin worden gekleurd
 
     create-turtles 11 [
-    set size 10
+    set size 1
     set color cyan
     ask turtle 0 [move-to patch -72 64]
     ask turtle 1 [move-to patch -71 63]
@@ -122,7 +122,11 @@ to start
   create-temporary-plot-pen "pen"
   set-current-plot "turtlecount"
   plot count turtles
-  ;Idk waarom dit moet maar anders doet ie het niet
+
+
+  create-temporary-plot-pen "pen"
+  set-current-plot "plott"
+  ;histogram
 
 
 
@@ -135,12 +139,12 @@ to start
   let #bewandelbarepatches (smoothness * bewandelbarepatches + (1 - smoothness) * explorers)
 
   ;; Berekening coverage
-  set coverage (bewandelbarepatches / usedpatches)
+  set coverage ((usedpatches / bewandelbarepatches) * 100 )
   let #coverage (smoothness * coverage + (1 - smoothness) * explorers)
 
 
 
-  if count turtles = 0 [print "stop"] ;Werkt niet omdat er turtles blijven leven (10 - 20 stuks); weet alleen niet waarom en het is irritant
+  ;if count turtles = 0 [print "stop"] ;Werkt niet omdat er turtles blijven leven (10 - 20 stuks); weet alleen niet waarom en het is irritant
 
 end
 
@@ -150,11 +154,12 @@ to afstand-dichtsbijzijnde-pad
   ask patches with [pcolor = brown][set owned true]
   ; ^ Alle patches die niet zwart zijn owned= true geven
 
+  let radius 2
   ask patches with [pcolor = black]
   [
+    set radius 2
     set owned false
     ;^Alle zwarte patches owned = false geven
-    let radius 2
     let success false
     while [success = false]
     [
@@ -167,8 +172,6 @@ to afstand-dichtsbijzijnde-pad
     ]
 
   ;------plot gezeik
-
-  let radius 2
 
   set mean-distance-to-closest-path (mean [radius] of patches)
 
@@ -253,7 +256,7 @@ min-angle
 min-angle
 0
 90
-15.0
+52.0
 1
 1
 NIL
@@ -268,7 +271,7 @@ rand-extra-angle
 rand-extra-angle
 0
 90
-14.0
+45.0
 1
 1
 NIL
@@ -281,7 +284,7 @@ SLIDER
 163
 hatch-modulus
 hatch-modulus
-0
+1
 20
 8.0
 1
@@ -296,9 +299,9 @@ SLIDER
 198
 look-forward
 look-forward
-0
+1
 40
-9.0
+5.0
 1
 1
 NIL
@@ -313,7 +316,7 @@ look-aside
 look-aside
 60
 120
-70.0
+65.0
 1
 1
 NIL
@@ -321,9 +324,9 @@ HORIZONTAL
 
 BUTTON
 5
-305
+380
 182
-338
+413
 NIL
 afstand-dichtsbijzijnde-pad
 NIL
@@ -338,14 +341,14 @@ NIL
 
 SLIDER
 10
-400
+530
 182
-433
+563
 color-intensity
 color-intensity
 0.01
 0.3
-0.13
+0.15
 0.01
 1
 NIL
@@ -353,19 +356,19 @@ HORIZONTAL
 
 TEXTBOX
 25
-350
+420
 175
-391
-Waarschuwing: Dit kan lang duren als er veel lege plekken aanwezig zijn!
+516
+Waarschuwing: Dit kan lang duren als er veel lege plekken aanwezig zijn!\n\nWaarschuwing: Zet eerst 'go' uit voordat je deze knop gebruikt!\n
 11
 0.0
 1
 
 BUTTON
-35
-440
-142
-473
+40
+565
+147
+598
 NIL
 reset-afstand
 NIL
@@ -413,10 +416,10 @@ turtlecount
 time
 turtles
 0.0
-900.0
+700.0
 0.0
-100.0
-false
+200.0
+true
 false
 "" "\n"
 PENS
@@ -471,6 +474,17 @@ false
 "" ""
 PENS
 "pen-0" 1.0 0 -7500403 true "" ""
+
+MONITOR
+1210
+470
+1292
+515
+NIL
+usedpatches
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?

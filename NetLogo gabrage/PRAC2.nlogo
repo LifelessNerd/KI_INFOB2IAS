@@ -1,4 +1,4 @@
-globals [circlelist turtleblock mean-distance-to-closest-path]
+globals [circlelist turtleblock mean-distance-to-closest-path coverage bewandelbarepatches max-distance-to-closest-path explorers usedpatches ]
 turtles-own [stappenteller]
 patches-own [owned]
 
@@ -45,9 +45,6 @@ to setup
 
   ask turtles [pen-down]
   ;;^ Turtles moeten een trail hebben
-
-
-
 
   reset-ticks
 end
@@ -122,28 +119,28 @@ to start
   ]
 
   ;--------------------------------------------------------- plot gezeik
-  let explorers 0
+  create-temporary-plot-pen "pen"
+  set-current-plot "turtlecount"
+  plot count turtles
+  ;Idk waarom dit moet maar anders doet ie het niet
+
+
+
   set explorers (count turtles)
 
-  plot count turtles
-
-
-  let usedpatches 0
   set usedpatches (count patches with [pcolor = cyan])
   let #usedpatches (smoothness * usedpatches + (1 - smoothness) * explorers)
 
-  let bewandelbarepatches 0
   set bewandelbarepatches (count patches with [pcolor = black])
   let #bewandelbarepatches (smoothness * bewandelbarepatches + (1 - smoothness) * explorers)
 
   ;; Berekening coverage
-  let coverage 0
   set coverage (bewandelbarepatches / usedpatches)
   let #coverage (smoothness * coverage + (1 - smoothness) * explorers)
 
 
 
-  if count turtles = 0 [print "stop"] ;Werkt niet wot?
+  if count turtles = 0 [print "stop"] ;Werkt niet omdat er turtles blijven leven (10 - 20 stuks); weet alleen niet waarom en het is irritant
 
 end
 
@@ -175,7 +172,6 @@ to afstand-dichtsbijzijnde-pad
 
   set mean-distance-to-closest-path (mean [radius] of patches)
 
-  let max-distance-to-closest-path 0
   set max-distance-to-closest-path (max [radius] of patches)
 
 end
@@ -257,7 +253,7 @@ min-angle
 min-angle
 0
 90
-55.0
+15.0
 1
 1
 NIL
@@ -272,7 +268,7 @@ rand-extra-angle
 rand-extra-angle
 0
 90
-0.0
+14.0
 1
 1
 NIL
@@ -287,7 +283,7 @@ hatch-modulus
 hatch-modulus
 0
 20
-4.0
+8.0
 1
 1
 NIL
@@ -349,7 +345,7 @@ color-intensity
 color-intensity
 0.01
 0.3
-0.07
+0.13
 0.01
 1
 NIL
@@ -403,7 +399,7 @@ MONITOR
 1342
 155
 NIL
-count turtles
+coverage
 17
 1
 11
@@ -414,6 +410,56 @@ PLOT
 1350
 315
 turtlecount
+time
+turtles
+0.0
+900.0
+0.0
+100.0
+false
+false
+"" "\n"
+PENS
+
+MONITOR
+1185
+420
+1317
+465
+NIL
+bewandelbarepatches
+17
+1
+11
+
+MONITOR
+1160
+370
+1342
+415
+NIL
+mean-distance-to-closest-path
+17
+1
+11
+
+MONITOR
+1165
+320
+1337
+365
+NIL
+max-distance-to-closest-path
+17
+1
+11
+
+PLOT
+1355
+165
+1555
+315
+plott
 NIL
 NIL
 0.0
@@ -422,9 +468,9 @@ NIL
 10.0
 true
 false
-"" "\n"
+"" ""
 PENS
-"pen-0" 1.0 0 -16777216 true "" "plot count turtles"
+"pen-0" 1.0 0 -7500403 true "" ""
 
 @#$#@#$#@
 ## WHAT IS IT?

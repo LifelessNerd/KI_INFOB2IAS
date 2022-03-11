@@ -1,98 +1,150 @@
 globals [circlelist turtleblock]
 turtles-own [stappenteller]
+patches-own [owned]
 
 to setup
   clear-all
-  ask patches [set pcolor brown]
+  ask patches [set pcolor brown]  ;Alle patches bruin
   set-patch-size 2
 
+  ;;V Lijst met cirkels uit IAS website
   set circlelist [[225 -82 30] [-227  -82 33] [-92  -22 26] [-147 98 36] [ 82  -25 25][ -61 -69 24] [ 211 -122 28] [ 77 -109 33] [-111 -7 39] [-28 -141 39][-220 -58 29] [-181 -102 23] [ 93   73 37] [ 166 19 31] [110   18 26][ 227 -61 28] [ 28   145 28] [  8  104 37] [ 133 57 36] [ 84 -144 37]]
 
-  ask patch 0 0 [ask patches in-radius 230 [set pcolor black]]
+  ask patch 0 0 [ask patches in-radius 230 [set pcolor black]] ;;1 zwarte cirkel in het midden
 
   foreach circlelist [circle-coordinate ->
     let x item 0 circle-coordinate
     let y item 1 circle-coordinate
     let r item 2 circle-coordinate
+    ;^Parseren van lijst naar daadwerkelijk bruikbare dingen
       ask patch x y  [ask patches in-radius r [set pcolor brown]
       ]
     ]
+  ;^ Van list met cirkels naar een daadwerkelijke cirkels die bruin worden gekleurd
 
     create-turtles 11 [
     set size 1
     set color cyan
-    move-to patch -72 61
+    ask turtle 0 [move-to patch -72 64]
+    ask turtle 1 [move-to patch -71 63]
+    ask turtle 2 [move-to patch -70 62]
+    ask turtle 3 [move-to patch -70 60]
+    ask turtle 4 [move-to patch -71 59]
+    ask turtle 5 [move-to patch -72 58]
+    ask turtle 6 [move-to patch -73 58]
+    ask turtle 7 [move-to patch -74 59]
+    ask turtle 8 [move-to patch -75 61]
+    ask turtle 9 [move-to patch -74 62]
+    ask turtle 10 [move-to patch -73 64]
+
+    ;;^ Turtles maken, grootte mag klein zijn, kleur bepaald, locaties zijn verschillend omdat de turtles anders op elkaar botsen en sterven, op deze manier is er genoeg ruimte
+
     set heading who * 32.7
+    ;;^ Rotatie van turtles zodat ze goed verdeeld zijn en alle kanten op gaan (om opnieuw niet te botsen)
     ]
 
   ask turtles [pen-down]
+  ;;^ Turtles moeten een trail hebben
 
   reset-ticks
-  print count patches with [ pcolor = black ]
 end
 
 to start
-ask turtles [
-
+  ask turtles [
+    ;V Een variabele die per turtle uitmaakt of hij geblockt wordt of niet
     set turtleblock false
-    let cone [pcolor] of patches in-cone patchaheaddistance 180
-    if member? 85 cone [
-      set turtleblock true
-    ]
+    let cone [pcolor] of patches in-cone look-forward look-aside
+    let brcone [pcolor] of patches in-cone look-forward look-aside
+    ;^Twee cones die alle patches in zich hebben van voor de turtle
+    if member? 85 cone [set turtleblock true]
+    if member? 35 brcone [set turtleblock true]
+    ;^Beide cones checken of er cyaan of bruin in zit; dan is er een blokkade
 
-    ;Situatie: turtle loopt -van canvas af -tegen iets bruins aan -tegen iets cyaans aan; kind maken zou ik zeggen
-    if not can-move? (patchaheaddistance) or [pcolor] of patch-ahead patchaheaddistance = brown or turtleblock = true [
+    ;V Situatie: turtle loopt of -van canvas af of -tegen iets bruins aan of -tegen iets cyaans aan; dan maar kind maken
+    if not can-move? (look-forward) or turtleblock = true [
+      ;V Kind maken, 1) stappenteller resetten voor dit kind (was nog van zn ouder) & 2) een rotatie meegeven
       hatch 1 [
-        set stappenteller 0
-        lt min-angle + random rand-extra-angle
-        if not can-move? (patchaheaddistance) or [pcolor] of patch-ahead patchaheaddistance = brown or turtleblock = true [
+        set stappenteller 0 ;1)
+        lt min-angle + random rand-extra-angle ;2)
+        if not can-move? (look-forward) or turtleblock = true [
           die
+          ; ^ Kan het kind zodra het geboren is niks, mag dood
         ]
         fd 1
+        ;^Kan het wel bewegen, mag ie doorlopen (vanaf nu is hij deel van alle turtles)
+        ;Ik laat hem hier nog wel 1 maal bewegen anders is er kans dat hij zn ouder ziet als blokkade
       ]
-
+      ;V Originele stappenteller ook resetten; hij mag weer hatchmodulus lopen
       set stappenteller 0
-      ;Origineel beta graden naar rechts draaien
+      ;V Origineel beta graden naar rechts draaien
       rt min-angle + random rand-extra-angle
-      ;Kan het na de roteer wel? ff checken, anders sterf
-      if not can-move? (patchaheaddistance) or [pcolor] of patch-ahead patchaheaddistance = brown or turtleblock = true [
+      fd 1 ;Ik laat hem hier nog wel 1 maal bewegen anders is er kans dat zichzelf ziet als blokkade
+      ;V Kan hij  na de roteer wel bewegen? ff checken, anders sterf
+      if not can-move? (look-forward) or turtleblock = true [
           die
         ]
-      fd 1
     ]
 
-    ;Te lang rechtdoor gelopen, is saai: ga maar splitsen
+    ;V Te lang rechtdoor gelopen, is saai: ga maar splitsen
     if stappenteller > hatch-modulus [
+      ;V Kind maken, 1) stappenteller resetten voor dit kind (hij had hem van zn ouder gekopieerd) & 2) een rotatie meegeven
       hatch 1 [
-        set stappenteller 0
-        ;Kloon alfa graden naar links draaien
-        lt min-angle + random rand-extra-angle
+        set stappenteller 0 ;1)
+        lt min-angle + random rand-extra-angle ;2)
         fd 1
-
+        ;^Kan het wel bewegen, mag ie doorlopen (vanaf nu is hij deel van alle turtles)
+        ;^Ik laat hem hier nog wel 1 maal bewegen anders is er kans dat hij zn ouder ziet als blokkade
       ]
-
+      ; V Originele stappenteller ook resetten; hij mag weer hatchmodulus lopen
       set stappenteller 0
-      ;Origineel beta graden naar rechts draaien
+      ;V Origineel beta graden naar rechts draaien
       rt min-angle + random rand-extra-angle
       fd 1
-
+      ;^Ik laat hem hier nog wel 1 maal bewegen anders is er kans dat zichzelf ziet als blokkade
     ]
 
-    ;failsafe voor errors mbt nobody
-    if patch-ahead patchaheaddistance = nobody [
-
+    ;V Failsafe voor errors mbt nobody (hij gaat van het canvas af, hij heeft hiervoor al een kind gemaakt, dus nu mag hij dood)
+    if patch-ahead look-forward = nobody [
+      die
     ]
 
-    ;Normale situatie, plek om vooruit te gaan
-    if [pcolor] of patch-ahead patchaheaddistance = black [
-      set pcolor color
-
+    ; V Normale situatie, plek om vooruit te gaan
+    if [pcolor] of patch-ahead look-forward = black [
+      set pcolor color ;Trail
       set stappenteller stappenteller + 1
-      forward 1
+      forward 1 ;Turtle mag vooruit
+    ]
+  ]
+end
+
+to afstand-dichtsbijzijnde-pad
+  ask patches [set owned false]
+  ask patches with [pcolor = cyan][set owned true]
+  ask patches with [pcolor = brown][set owned true]
+  ; ^ Alle patches die niet zwart zijn owned= true geven
+
+  ask patches with [pcolor = black]
+  [
+    set owned false
+    ;^Alle zwarte patches owned = false geven
+    let radius 2
+    let success false
+    while [success = false]
+    [
+      ;V voor alle zwarte patches constant een cirkel maken, checken of er blauwe patches in zitten
+      ask patches in-radius radius [if pcolor = cyan [set success true]]
+      set radius (radius * 1.5) ;Is dit niet zo, verhoog de radius (1.5 geeft prima performance, en ver weg hoef je toch niet veel detail te zien)
+      ]
+       if (success = true and radius > 2) [set pcolor scale-color yellow (log radius 3) 0 (1 / color-intensity)]
+    ; ^Is dit wel zo, zet de kleur van de patch naar een gradient van geel op basis van de radius en sliders
     ]
 
+end
 
-
+to reset-afstand
+  ; V Alle geelgekleurde patches (die ooit zwart waren en dus owned = false hadden) weer zwart maken)
+  ask patches with [owned = false][
+    set pcolor black
   ]
 end
 @#$#@#$#@
@@ -135,7 +187,7 @@ NIL
 T
 OBSERVER
 NIL
-NIL
+S
 NIL
 NIL
 1
@@ -145,9 +197,101 @@ BUTTON
 92
 127
 125
-NIL
+go
 start
 T
+1
+T
+OBSERVER
+NIL
+G
+NIL
+NIL
+1
+
+SLIDER
+10
+235
+182
+268
+min-angle
+min-angle
+0
+90
+55.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+10
+270
+182
+303
+rand-extra-angle
+rand-extra-angle
+0
+90
+36.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+10
+130
+182
+163
+hatch-modulus
+hatch-modulus
+0
+20
+3.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+10
+165
+182
+198
+look-forward
+look-forward
+0
+40
+6.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+10
+200
+182
+233
+look-aside
+look-aside
+60
+120
+66.0
+1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+5
+305
+182
+338
+NIL
+afstand-dichtsbijzijnde-pad
+NIL
 1
 T
 OBSERVER
@@ -158,64 +302,46 @@ NIL
 1
 
 SLIDER
-9
-133
-181
-166
-min-angle
-min-angle
-0
-90
-56.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-9
-174
-181
-207
-rand-extra-angle
-rand-extra-angle
-0
-90
-59.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-9
-214
-181
-247
-hatch-modulus
-hatch-modulus
-0
-100
-17.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
 10
-255
+400
 182
-288
-patchaheaddistance
-patchaheaddistance
-0
-25
-4.0
-1
+433
+color-intensity
+color-intensity
+0.01
+0.3
+0.07
+0.01
 1
 NIL
 HORIZONTAL
+
+TEXTBOX
+25
+350
+175
+391
+Waarschuwing: Dit kan lang duren als er veel lege plekken aanwezig zijn!
+11
+0.0
+1
+
+BUTTON
+35
+440
+142
+473
+NIL
+reset-afstand
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -563,6 +689,31 @@ NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="experiment" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <metric>count turtles</metric>
+    <enumeratedValueSet variable="look-forward">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="rand-extra-angle">
+      <value value="33"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="look-aside">
+      <value value="20"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="color-intensity">
+      <value value="0.0401"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="min-angle">
+      <value value="50"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="hatch-modulus">
+      <value value="17"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default

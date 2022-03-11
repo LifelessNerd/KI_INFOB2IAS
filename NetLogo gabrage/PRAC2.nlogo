@@ -1,4 +1,4 @@
-globals [circlelist]
+globals [circlelist turtleblock]
 turtles-own [stappenteller]
 
 to setup
@@ -33,34 +33,66 @@ end
 
 to start
 ask turtles [
-    ;Situatie: turtle loopt vast: dan maar kind maken
-    if not can-move? patchaheaddistance [
+
+    set turtleblock false
+    let cone [pcolor] of patches in-cone patchaheaddistance 180
+    if member? 85 cone [
+      set turtleblock true
+    ]
+
+    ;Situatie: turtle loopt -van canvas af -tegen iets bruins aan -tegen iets cyaans aan; kind maken zou ik zeggen
+    if not can-move? (patchaheaddistance) or [pcolor] of patch-ahead patchaheaddistance = brown or turtleblock = true [
       hatch 1 [
-      lt random 360
-      fd 1
-      set stappenteller 0
+        set stappenteller 0
+        lt min-angle + random rand-extra-angle
+        if not can-move? (patchaheaddistance) or [pcolor] of patch-ahead patchaheaddistance = brown or turtleblock = true [
+          die
+        ]
+        fd 1
       ]
 
-      ;hoort hier eigk niet maar anders loopt t progrtamma vast
-      stop
+      set stappenteller 0
+      ;Origineel beta graden naar rechts draaien
+      rt min-angle + random rand-extra-angle
+      ;Kan het na de roteer wel? ff checken, anders sterf
+      if not can-move? (patchaheaddistance) or [pcolor] of patch-ahead patchaheaddistance = brown or turtleblock = true [
+          die
+        ]
+      fd 1
     ]
+
     ;Te lang rechtdoor gelopen, is saai: ga maar splitsen
     if stappenteller > hatch-modulus [
       hatch 1 [
-      lt random 360
-      fd 1
-      set stappenteller 0
+        set stappenteller 0
+        ;Kloon alfa graden naar links draaien
+        lt min-angle + random rand-extra-angle
+        fd 1
+
       ]
 
-      die
+      set stappenteller 0
+      ;Origineel beta graden naar rechts draaien
+      rt min-angle + random rand-extra-angle
+      fd 1
+
     ]
+
+    ;failsafe voor errors mbt nobody
+    if patch-ahead patchaheaddistance = nobody [
+
+    ]
+
     ;Normale situatie, plek om vooruit te gaan
-    if [pcolor] of patch-ahead patchaheaddistance = black [;or [pcolor] of patch-ahead patchaheaddistance = cyan [
+    if [pcolor] of patch-ahead patchaheaddistance = black [
       set pcolor color
+
       set stappenteller stappenteller + 1
-      print stappenteller
       forward 1
     ]
+
+
+
   ]
 end
 @#$#@#$#@
@@ -130,12 +162,12 @@ SLIDER
 133
 181
 166
-alfahoek
-alfahoek
--180
-180
-0.0
-10
+min-angle
+min-angle
+0
+90
+56.0
+1
 1
 NIL
 HORIZONTAL
@@ -145,12 +177,12 @@ SLIDER
 174
 181
 207
-betahoek
-betahoek
--180
-180
-0.0
-10
+rand-extra-angle
+rand-extra-angle
+0
+90
+59.0
+1
 1
 NIL
 HORIZONTAL
@@ -164,7 +196,7 @@ hatch-modulus
 hatch-modulus
 0
 100
-100.0
+17.0
 1
 1
 NIL
@@ -179,7 +211,7 @@ patchaheaddistance
 patchaheaddistance
 0
 25
-10.0
+4.0
 1
 1
 NIL

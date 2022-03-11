@@ -1,4 +1,4 @@
-globals [circlelist turtleblock mean-distance-to-closest-path coverage bewandelbarepatches max-distance-to-closest-path explorers usedpatches ]
+globals [circlelist turtleblock mean-distance-to-closest-path coverage bewandelbarepatches max-distance-to-closest-path usedpatches radialist]
 turtles-own [stappenteller]
 patches-own [owned]
 
@@ -9,8 +9,8 @@ to setup
 
   ;;V Lijst met cirkels uit IAS website
   set circlelist [[225 -82 30] [-227  -82 33] [-92  -22 26] [-147 98 36] [ 82  -25 25][ -61 -69 24] [ 211 -122 28] [ 77 -109 33] [-111 -7 39] [-28 -141 39][-220 -58 29] [-181 -102 23] [ 93   73 37] [ 166 19 31] [110   18 26][ 227 -61 28] [ 28   145 28] [  8  104 37] [ 133 57 36] [ 84 -144 37]]
-
-  ask patch 0 0 [ask patches in-radius 230 [set pcolor black]] ;;1 zwarte cirkel in het midden
+  set radialist []
+  ask patch 0 0 [ask patches in-radius 225 [set pcolor black]] ;;1 zwarte cirkel in het midden
 
   foreach circlelist [circle-coordinate ->
     let x item 0 circle-coordinate
@@ -23,7 +23,7 @@ to setup
   ;^ Van list met cirkels naar een daadwerkelijke cirkels die bruin worden gekleurd
 
     create-turtles 11 [
-    set size 1
+    set size 10
     set color cyan
     ask turtle 0 [move-to patch -72 64]
     ask turtle 1 [move-to patch -71 63]
@@ -118,29 +118,27 @@ to start
 
   ]
 
-  ;--------------------------------------------------------- plot gezeik
+  ;plot voor turtlecount
+  let explorers (count turtles)
+
   create-temporary-plot-pen "pen"
   set-current-plot "turtlecount"
-  plot count turtles
-
-
-  create-temporary-plot-pen "pen"
-  set-current-plot "plott"
-  ;histogram
+  plot explorers
 
 
 
-  set explorers (count turtles)
 
+  ;Alle patches die blauw zijn zijn bewandeld
   set usedpatches (count patches with [pcolor = cyan])
-  let #usedpatches (smoothness * usedpatches + (1 - smoothness) * explorers)
+  ;let #usedpatches (smoothness * usedpatches + (1 - smoothness) * explorers)
 
+  ;Alle patches die zwart zijn zijn nog bewandelbaar
   set bewandelbarepatches (count patches with [pcolor = black])
-  let #bewandelbarepatches (smoothness * bewandelbarepatches + (1 - smoothness) * explorers)
+  ;let #bewandelbarepatches (smoothness * bewandelbarepatches + (1 - smoothness) * explorers)
 
   ;; Berekening coverage
   set coverage ((usedpatches / bewandelbarepatches) * 100 )
-  let #coverage (smoothness * coverage + (1 - smoothness) * explorers)
+  ;let #coverage (smoothness * coverage + (1 - smoothness) * explorers)
 
 
 
@@ -167,17 +165,26 @@ to afstand-dichtsbijzijnde-pad
       ask patches in-radius radius [if pcolor = cyan [set success true]]
       set radius (radius * 1.5) ;Is dit niet zo, verhoog de radius (1.5 geeft prima performance, en ver weg hoef je toch niet veel detail te zien)
       ]
-       if (success = true and radius > 2) [set pcolor scale-color yellow (log radius 3) 0 (1 / color-intensity)]
-    ; ^Is dit wel zo, zet de kleur van de patch naar een gradient van geel op basis van de radius en sliders
+       if (success = true and radius > 2) [set pcolor scale-color yellow (log radius 3) 0 (1 / color-intensity)
+       set radialist lput radius radialist
+      ; ^ alle radiuses worden in een lijst geplaatst voor de histogram
     ]
+    ; ^Is dit wel zo, zet de kleur van de patch naar een gradient van geel op basis van de radius en sliders
+  ]
 
-  ;------plot gezeik
+  ;Monitors aanvullen met statistiek; men neme mean of max uit onze radialist
+  set mean-distance-to-closest-path (mean radialist)
+  set max-distance-to-closest-path (max radialist)
 
-  set mean-distance-to-closest-path (mean [radius] of patches)
-
-  set max-distance-to-closest-path (max [radius] of patches)
+  ;HISTOGRAM voor radialist lijst
+  set-current-plot "Distribution of distance to closest path"
+  set-plot-x-range 0 (round max-distance-to-closest-path)
+  create-temporary-plot-pen "histopen"
+  set-plot-pen-mode 1
+  histogram radialist
 
 end
+
 
 to reset-afstand
   ; V Alle geelgekleurde patches (die ooit zwart waren en dus owned = false hadden) weer zwart maken)
@@ -256,7 +263,7 @@ min-angle
 min-angle
 0
 90
-52.0
+3.0
 1
 1
 NIL
@@ -271,7 +278,7 @@ rand-extra-angle
 rand-extra-angle
 0
 90
-45.0
+90.0
 1
 1
 NIL
@@ -286,7 +293,7 @@ hatch-modulus
 hatch-modulus
 1
 20
-8.0
+4.0
 1
 1
 NIL
@@ -301,7 +308,7 @@ look-forward
 look-forward
 1
 40
-5.0
+8.0
 1
 1
 NIL
@@ -316,17 +323,17 @@ look-aside
 look-aside
 60
 120
-65.0
+80.0
 1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-5
-380
-182
-413
+6
+364
+183
+397
 NIL
 afstand-dichtsbijzijnde-pad
 NIL
@@ -355,10 +362,10 @@ NIL
 HORIZONTAL
 
 TEXTBOX
-25
-420
-175
-516
+24
+406
+174
+521
 Waarschuwing: Dit kan lang duren als er veel lege plekken aanwezig zijn!\n\nWaarschuwing: Zet eerst 'go' uit voordat je deze knop gebruikt!\n
 11
 0.0
@@ -381,65 +388,50 @@ NIL
 NIL
 1
 
-SLIDER
-1160
-70
-1332
-103
-smoothness
-smoothness
-0
-1
-1.0
-0.1
-1
-NIL
-HORIZONTAL
-
 MONITOR
-1160
-110
-1342
-155
-NIL
+1130
+21
+1312
+66
+coverage %
 coverage
-17
+2
 1
 11
 
 PLOT
-1150
-165
-1350
-315
+1360
+15
+1624
+232
 turtlecount
 time
 turtles
 0.0
-700.0
+500.0
 0.0
 200.0
-true
+false
 false
 "" "\n"
 PENS
 
 MONITOR
-1185
-420
-1317
-465
-NIL
+1132
+185
+1264
+230
+zwarte pacthes
 bewandelbarepatches
 17
 1
 11
 
 MONITOR
-1160
-370
-1342
-415
+1130
+128
+1312
+173
 NIL
 mean-distance-to-closest-path
 17
@@ -447,10 +439,10 @@ mean-distance-to-closest-path
 11
 
 MONITOR
-1165
-320
-1337
-365
+1132
+75
+1304
+120
 NIL
 max-distance-to-closest-path
 17
@@ -458,11 +450,11 @@ max-distance-to-closest-path
 11
 
 PLOT
-1355
-165
-1555
-315
-plott
+1132
+240
+1623
+623
+Distribution of distance to closest path
 NIL
 NIL
 0.0
@@ -473,14 +465,13 @@ true
 false
 "" ""
 PENS
-"pen-0" 1.0 0 -7500403 true "" ""
 
 MONITOR
-1210
-470
-1292
-515
-NIL
+1270
+185
+1350
+231
+blauw
 usedpatches
 17
 1
@@ -489,39 +480,43 @@ usedpatches
 @#$#@#$#@
 ## WHAT IS IT?
 
-(a general understanding of what the model is trying to show or explain)
+### GRANULAR FLUID SYSTEM
+Een systeem dat zich zou voordoen wanneer men water tussen twee platen platdrukt.
+
 
 ## HOW IT WORKS
 
-(what rules the agents use to create the overall behavior of the model)
+De turtles starten op dezelfde positie, en hebben elk hun eigen rotatie. De turtles beginnen te lopen. 
+### REGELS
+Turtles kunnen enkel door zwarte patches heen, niet door bruine of door blauwe.
+Zodra turtles een blokkade tegenkomen proberen ze te splitsen. Beide turtles krijgen dan een verandering in hoek mee die door de gebruiker is in te stellen. 
+Als de turtle-ouder hierna niets kan sterft deze. De kloon heeft ook nog een kans om te ontsnappen. Als ook deze opnieuw geblokkeerd is, sterft deze ook.
+Als turtles een te lange tijd rechtdoor gaan kunnen deze ook uitzichzelf beslissen om op te splitsen. 
+
 
 ## HOW TO USE IT
 
-(how to use the model, including a description of each of the items in the Interface tab)
+Gebruik eerst _setup_ om het speelveld te maken.
+Hierna kan men de parameters instellen, en op _go_ drukken.
+### PARAMETERS
+**hatch-modulus** is de afstand die een turtle ongeblokkeerd kan doorlopen voordat deze uit zichzelf splitst.
+**look-forward** is de afstand waarin, als er een blokkade zich voordoet, de turtle deze ook daadwerkelijk ziet. Als deze waarde hoog ligt zal de turtle dus al sneller stoppen als het ziet dat hij over een tijd een blokkade tegenkomt (en hij zal dus proberen te splitsen).
+**look-aside** is de hoek waarin de turtle scant op blokkade's. Het is aangeraden deze op 30 te houden. De turtle maakt als het ware een conus.
+**min-angle** is de hoek die een kloon meegegeven krijgt zodra hij afsplitst van zijn ouder. De ouder zelf krijgt deze hoek ook mee, enkel de andere kant op.
+**max-rand-angle** is de maximale deviatie van de minimale hoek die hierboven beschreven staat. Er zal dus een hoeveelheid toegevoegd worden aan die hoek, hiermee kan de hoeveelheid chaos vergroot worden.
 
-## THINGS TO NOTICE
+## FEATURES
 
-(suggested things for the user to notice while running the model)
+Nadat de simulatie compleet is (vergeet niet _go_ weer uit te zetten) kan men een heatmap maken van het speelveld. De intensiteit van de kleur kan ook worden ingesteld. 
+Hoe geler een patch is, hoe verder weg er zich een bewandeld pad bevindt.
+Men kan de gele kleur weer weg halen door op _reset-afstand_ te klikken.
 
-## THINGS TO TRY
+Men kan met behulp van NetLogo's BahaviourSpace een perfecte combo vinden tussen de parameters.
 
-(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
+## STATISTIEK
+Verscheidene output-waarden staan aan de rechterkant beschreven.
+Ook zijn er grafieken waarvan sommigen pas werken wanneer de heatmap gebruikt is.
 
-## EXTENDING THE MODEL
-
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
-
-## NETLOGO FEATURES
-
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
-
-## RELATED MODELS
-
-(models in the NetLogo Models Library and elsewhere which are of related interest)
-
-## CREDITS AND REFERENCES
-
-(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
 @#$#@#$#@
 default
 true
@@ -835,25 +830,28 @@ NetLogo 6.2.2
 <experiments>
   <experiment name="experiment" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
-    <go>go</go>
-    <metric>count turtles</metric>
+    <go>start</go>
+    <timeLimit steps="800"/>
+    <metric>count coverage</metric>
     <enumeratedValueSet variable="look-forward">
-      <value value="5"/>
+      <value value="1"/>
+      <value value="30"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="rand-extra-angle">
-      <value value="33"/>
+      <value value="0"/>
+      <value value="90"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="look-aside">
-      <value value="20"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="color-intensity">
-      <value value="0.0401"/>
+      <value value="60"/>
+      <value value="120"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="min-angle">
-      <value value="50"/>
+      <value value="0"/>
+      <value value="45"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="hatch-modulus">
-      <value value="17"/>
+      <value value="1"/>
+      <value value="5"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>

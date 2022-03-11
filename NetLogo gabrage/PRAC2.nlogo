@@ -1,4 +1,4 @@
-globals [circlelist turtleblock]
+globals [circlelist turtleblock mean-distance-to-closest-path]
 turtles-own [stappenteller]
 patches-own [owned]
 
@@ -23,7 +23,7 @@ to setup
   ;^ Van list met cirkels naar een daadwerkelijke cirkels die bruin worden gekleurd
 
     create-turtles 11 [
-    set size 1
+    set size 10
     set color cyan
     ask turtle 0 [move-to patch -72 64]
     ask turtle 1 [move-to patch -71 63]
@@ -46,10 +46,14 @@ to setup
   ask turtles [pen-down]
   ;;^ Turtles moeten een trail hebben
 
+
+
+
   reset-ticks
 end
 
 to start
+
   ask turtles [
     ;V Een variabele die per turtle uitmaakt of hij geblockt wordt of niet
     set turtleblock false
@@ -114,7 +118,33 @@ to start
       set stappenteller stappenteller + 1
       forward 1 ;Turtle mag vooruit
     ]
+
   ]
+
+  ;--------------------------------------------------------- plot gezeik
+  let explorers 0
+  set explorers (count turtles)
+
+  plot count turtles
+
+
+  let usedpatches 0
+  set usedpatches (count patches with [pcolor = cyan])
+  let #usedpatches (smoothness * usedpatches + (1 - smoothness) * explorers)
+
+  let bewandelbarepatches 0
+  set bewandelbarepatches (count patches with [pcolor = black])
+  let #bewandelbarepatches (smoothness * bewandelbarepatches + (1 - smoothness) * explorers)
+
+  ;; Berekening coverage
+  let coverage 0
+  set coverage (bewandelbarepatches / usedpatches)
+  let #coverage (smoothness * coverage + (1 - smoothness) * explorers)
+
+
+
+  if count turtles = 0 [print "stop"] ;Werkt niet wot?
+
 end
 
 to afstand-dichtsbijzijnde-pad
@@ -138,6 +168,15 @@ to afstand-dichtsbijzijnde-pad
        if (success = true and radius > 2) [set pcolor scale-color yellow (log radius 3) 0 (1 / color-intensity)]
     ; ^Is dit wel zo, zet de kleur van de patch naar een gradient van geel op basis van de radius en sliders
     ]
+
+  ;------plot gezeik
+
+  let radius 2
+
+  set mean-distance-to-closest-path (mean [radius] of patches)
+
+  let max-distance-to-closest-path 0
+  set max-distance-to-closest-path (max [radius] of patches)
 
 end
 
@@ -233,7 +272,7 @@ rand-extra-angle
 rand-extra-angle
 0
 90
-36.0
+0.0
 1
 1
 NIL
@@ -248,7 +287,7 @@ hatch-modulus
 hatch-modulus
 0
 20
-3.0
+4.0
 1
 1
 NIL
@@ -263,7 +302,7 @@ look-forward
 look-forward
 0
 40
-6.0
+9.0
 1
 1
 NIL
@@ -278,7 +317,7 @@ look-aside
 look-aside
 60
 120
-66.0
+70.0
 1
 1
 NIL
@@ -342,6 +381,50 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+1160
+70
+1332
+103
+smoothness
+smoothness
+0
+1
+1.0
+0.1
+1
+NIL
+HORIZONTAL
+
+MONITOR
+1160
+110
+1342
+155
+NIL
+count turtles
+17
+1
+11
+
+PLOT
+1150
+165
+1350
+315
+turtlecount
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" "\n"
+PENS
+"pen-0" 1.0 0 -16777216 true "" "plot count turtles"
 
 @#$#@#$#@
 ## WHAT IS IT?

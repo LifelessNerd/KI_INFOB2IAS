@@ -1,4 +1,5 @@
-globals [strategy-colors strategy strategies colors indices]
+globals [strategy-colors strategies colors indices]
+patches-own [strategy]
 
 
 
@@ -10,10 +11,10 @@ globals [strategy-colors strategy strategies colors indices]
 
 to setup
 
-  ask patches
+  ask patches [
 
     ;; Strategy houd per patch bij welke strategie die hanteert, varieert van 1-12.
-  let strategy int
+  set strategy int
   ;; if pcolor = red [ ask neighbors]
 
   let strategies strings [
@@ -42,7 +43,7 @@ to setup
   set strategy-colors [
   ["always-cooperate" green]
   ["always-defect" red]
-  [" play randomly" gray]
+  ["play randomly" gray]
   ["unforgiving" 102]
   ["tit for tat" violet]
   ["pessimistic tit for tat" magenta]
@@ -54,10 +55,12 @@ to setup
   ["Pavlov" brown]]
 
 
-  set strategies    map [ [x] -> item 0 x ] strategy-colors ; strip strategies from strategy-colors
+  set strategies map [ [x] -> item 0 x ] strategy-colors ; strip strategies from strategy-colors
 
+
+  ]
   ;Draft om alle patches een strategie te geven op basis van sliders
-  ask up-to-n-of 50 patches with [pcolor = black][
+  ask up-to-n-of 50 patches with [pcolor = black] [
     set pcolor red
   ]
 
@@ -274,7 +277,7 @@ CD-payoff-sucker
 CD-payoff-sucker
 -5
 5
-1.0
+4.0
 1
 1
 NIL
@@ -304,7 +307,7 @@ DD-payoff-punishment
 DD-payoff-punishment
 -5
 5
-50.0
+4.0
 1
 1
 NIL

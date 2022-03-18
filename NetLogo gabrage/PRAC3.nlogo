@@ -1,5 +1,5 @@
 globals [strategy-colors strategies colors indices]
-patches-own [strategy]
+patches-own [strategy neighborhood]
 
 
 
@@ -13,15 +13,7 @@ to setup
 
   ask patches [
 
-    ;; Strategy houd per patch bij welke strategie die hanteert, varieert van 1-12.
-  set strategy int
   ;; if pcolor = red [ ask neighbors]
-
-  let strategies strings [
-    "always-cooperate" "always-defect" "unforgiving" "tit for tat" "pessimistic tit for tat" "forgiving tit for tat" "tit for two tats" "majority" "eatherly" "Joss 5%" "Pavlov"
-  ]
-
-  let colors color [green red gray 102 violet magenta 13 23 pink blue orange brown]
 
   ;;Koppeling tussen strategienaam en index voor strategie
   set indices [
@@ -55,8 +47,9 @@ to setup
   ["Pavlov" brown]]
 
 
+  set indices n-values length strategies [ [x] -> x ]
   set strategies map [ [x] -> item 0 x ] strategy-colors ; strip strategies from strategy-colors
-
+  set colors map [ [x] -> item 1 x ] strategy-colors ; strip colors     from strategy-colors
 
   ]
   ;Draft om alle patches een strategie te geven op basis van sliders
@@ -64,10 +57,27 @@ to setup
     set pcolor red
   ]
 
+  ask patches [ set neighborhood (patch-set self neighbors) ]
+
+  clear-output clear-all-plots reset-ticks
+
 end
 
 to recalc
   ask patches [set pcolor black]
+end
+
+to go
+
+  foreach indices [ [i] ->
+    create-temporary-plot-pen item i strategies
+    set-plot-pen-color item i colors
+  ]
+
+
+  set score-table map [ [s] -> score-row-for s ] strategies
+
+
 end
 @#$#@#$#@
 GRAPHICS-WINDOW

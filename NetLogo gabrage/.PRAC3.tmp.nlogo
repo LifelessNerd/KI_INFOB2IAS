@@ -54,8 +54,6 @@ to setup
   ["Pavlov" brown]]
 
 
-  set strategies    map [ [x] -> item 0 x ] strategy-colors ; strip strategies from strategy-colors
-
   ;Draft om alle patches een strategie te geven op basis van sliders
   ask up-to-n-of 50 patches with [pcolor = black][
     set pcolor red

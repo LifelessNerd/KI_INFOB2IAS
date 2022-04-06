@@ -1,4 +1,4 @@
-globals [strategy-colors strategies colors indices payoff-matrix]
+globals [strategy-colors strategies colors indices payoff-matrix sum-of-strategies mean-total-payoff proportions]
 patches-own [strategy neighborhood]
 
 ;;methode voor kleurverandering moet nog geschreven worden
@@ -8,9 +8,10 @@ patches-own [strategy neighborhood]
 ;; set mean-total-payoff
 
 to setup
+clear-output clear-all-plots reset-ticks
 
 set payoff-matrix (list (list CC-payoff-reward CD-payoff-sucker) (list DC-payoff-temptation DD-payoff-punishment))
-  ;; CC-payoff-reward etc. zijn of 0 of 1 (dichotoom).
+  ;; CC-payoff-reward etc. zijn of 0 of 1 (dichotoom); of toch niet, allemaal onvoldoende
 
   ask patches [
   ;; if pcolor = red [ ask neighbors]
@@ -35,28 +36,63 @@ set payoff-matrix (list (list CC-payoff-reward CD-payoff-sucker) (list DC-payoff
   set strategy-colors [
   ["always-cooperate" green]
   ["always-defect" red]
-  ["play randomly" gray]
+  ["play-randomly" gray]
   ["unforgiving" 102]
-  ["tit for tat" violet]
-  ["pessimistic tit for tat" magenta]
-  ["forgiving tit for tat" 13]
-  ["tit for two tats" 23]
+  ["tit-for-tat" violet]
+  ["pessimistic-tit-for-tat" magenta]
+  ["forgiving-tit-for-tat" 13]
+  ["tit-for-two-tats" 23]
   ["majority" pink]
   ["eatherly" blue]
-  ["Joss 5%" orange]
-  ["Pavlov" brown]]
+  ["Joss-5%" orange]
+  ["Pavlov" brown]
+    ]
 
-
-  set indices n-values length strategies [ [x] -> x ]
   set strategies map [ [x] -> item 0 x ] strategy-colors ; strip strategies from strategy-colors
   set colors map [ [x] -> item 1 x ] strategy-colors ; strip colors     from strategy-colors
+  set indices n-values length strategies [ [x] -> x ] ; was ooit [x]
 
   ]
   ;Draft om alle patches een strategie te geven op basis van sliders
-  ask up-to-n-of 50 patches with [pcolor = black] [
-    set pcolor red
+
+  normalize-strategy-ratios
+
+
+  let strategy-bag map [ [i] -> rijtje i (1000 * run-result (word "start-" item i strategies)) ] indices
+; strategy-bag now looks like [[0 0 0 ...] [1 1 ...] [2 2 2 2 2 ...] ...]
+; the length of each sub-list corresponds to the start-proportion of that strategy
+
+let strategy-pool reduce [ [x y] -> sentence x y ] strategy-bag
+; strategy-pool now looks like [0 0 0 ... 1 1 ... 2 2 2 2 2 ... ...]
+; and contains about 1000 indices
+
+ask patches [
+ set strategy one-of strategy-pool  ; "strategy" is a natural number; "one-of" is a Netlogo primitive
+ set pcolor item strategy colors    ; give patch the color of the strategy it it assigned to
+]
+;;
+
+; creert de plotpennen dynamisch
+foreach indices [ [i] ->
+  create-temporary-plot-pen item i strategies
+  set-plot-pen-color item i colors
+]
+
+
+
+;set neighborhood (patch-set self neighbors) ; levert een set van de acht buren en zichzelf
+end
+
+to-report rijtje [ x n ] ; e.g., rijtje 7 5 yields [7 7 7 7 7]
+  report n-values n [ x ]
+end
+
+to normalize-strategy-ratios
+  set sum-of-strategies sum map [ [s] -> run-result (word "start-" s) ] strategies
+  if abs(sum-of-strategies - 1) <= 0.001 [ stop ] ; already normalized
+  foreach strategies [ [s] ->
+    run (word "set start-" s " precision (start-" s " / sum-of-strategies) 2")
   ]
-[ set neighborhood (patch-set self neighbors) ] ; levert een set van de acht buren en zichzelf
 end
 
 to recalc
@@ -65,25 +101,27 @@ to recalc
 
 end
 
-to go
-  clear-output clear-all-plots reset-ticks
+;to go
+;
+;
+;  ;;hier volgt de mainloop die de gemiddelde pay-off berekent van spelen tegen de buren, deze pay-off wordt opgehaald in de score tabel
+;
+;  ask patches [
+;    set mean-total-payoff
+;      mean [
+;        item strategy item ([ strategy ] of myself) score-table
+;      ] of neighborhood
+;  ]
+;  ask patches
+;  [
+;    tick
+;  do-plots
+;  ]
+;end
 
-  ;;hier volgt de mainloop die de gemiddelde pay-off berekent van spelen tegen de buren, deze pay-off wordt opgehaald in de score tabel
 
-  ask patches [
-    set mean-total-payoff
-      mean [
-        item strategy item ([ strategy ] of myself) score-table
-      ] of neighbors
-  ]
-  ask patches
-  [
-    tick
-  do-plots
-  ]
-end
 
-  ;; Tekenen van het plot
+   ;Tekenen van het plot
 to do-plots
   let frequencies map [ [i] -> count patches with [ strategy = i ] ] indices
   set proportions map [ [i] -> i / count patches ] frequencies ; that's ok: count patches is an inexpensive operation
@@ -93,19 +131,53 @@ to do-plots
   ; plot strategy proportions
 end
 
-
-  ;; creert de plotpennen dynamisch
-  foreach indices [ [i] ->
-    create-temporary-plot-pen item i strategies
-    set-plot-pen-color item i colors
-  ]
+to-report score-table-creator
 
 ;; Een score-tabel bestaat uit een lijst van lijsten
-[set score-table map [ [s] -> score-row-for s ] strategies
+let score-table map [ [s] -> score-row-for s ] strategies
+end
+
 to-report score-row-for [ s1 ]
-  report map [ [s2] -> score-entry-for s1 s2 ] strategies]
+  report map [ [s2] -> score-entry-for s1 s2 ] strategies
 
 end
+
+to-report score-entry-for [ s1 s2 ]
+  report mean n-values restarts [ score-for s1 s2 ]
+end
+
+to-report score-for [ s1 s2 ]
+  let my-history       []
+  let your-history     []
+  let my-total-payoff  0
+  repeat rounds [
+    let my-action        play s1 my-history your-history
+    let your-action      play s2 your-history my-history
+    let my-payoff        item your-action (item my-action payoff-matrix)
+    set my-total-payoff  my-total-payoff + my-payoff
+    set my-history       fput my-action   my-history   ; most recent actions go first
+    set your-history     fput your-action your-history
+  ]
+  report my-total-payoff
+end
+
+to-report play [ some-strategy my-history your-history ]
+  report ifelse-value (random-float 1.0 < noise) [
+    random-action ] [ runresult (word some-strategy " my-history your-history") ]
+end
+
+
+;;WE GAAN NU ALLE ALGORITMES DEFINIEREN
+to-report random-action
+  report random 1
+end
+to-report play-randomly [ my-history your-history ]
+  report random 1
+end
+to-report always-cooperate [ my-history your-history ]
+  report 0
+end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 230
@@ -298,7 +370,7 @@ SLIDER
 CC-payoff-reward
 CC-payoff-reward
 0
-1
+5
 0.0
 1
 1
@@ -313,7 +385,7 @@ SLIDER
 CD-payoff-sucker
 CD-payoff-sucker
 0
-1
+5
 0.0
 1
 1
@@ -328,7 +400,7 @@ SLIDER
 DC-payoff-temptation
 DC-payoff-temptation
 0
-1
+5
 0.0
 1
 1
@@ -343,7 +415,7 @@ SLIDER
 DD-payoff-punishment
 DD-payoff-punishment
 0
-1
+5
 0.0
 0
 1
@@ -435,7 +507,7 @@ start-always-cooperate
 start-always-cooperate
 0
 1
-0.1
+0.46
 0.01
 1
 NIL
@@ -450,7 +522,7 @@ start-always-defect
 start-always-defect
 0
 1
-0.1
+0.0
 0.01
 1
 NIL
@@ -465,7 +537,7 @@ start-play-randomly
 start-play-randomly
 0
 1
-0.1
+0.37
 0.01
 1
 NIL
@@ -480,7 +552,7 @@ start-unforgiving
 start-unforgiving
 0
 1
-0.1
+0.06
 0.01
 1
 NIL
@@ -495,7 +567,7 @@ start-tit-for-tat
 start-tit-for-tat
 0
 1
-0.1
+0.0
 0.01
 1
 NIL
@@ -504,13 +576,13 @@ HORIZONTAL
 SLIDER
 670
 400
-847
+845
 433
 start-tit-for-two-tats
 start-tit-for-two-tats
 0
 1
-0.1
+0.06
 0.01
 1
 NIL
@@ -525,7 +597,7 @@ start-pessimistic-tit-for-tat
 start-pessimistic-tit-for-tat
 0
 1
-0.1
+0.0
 0.01
 1
 NIL
@@ -540,7 +612,7 @@ start-forgiving-tit-for-tat
 start-forgiving-tit-for-tat
 0
 1
-0.1
+0.0
 0.01
 1
 NIL
@@ -555,7 +627,7 @@ start-majority
 start-majority
 0
 1
-0.1
+0.0
 0.01
 1
 NIL
@@ -570,7 +642,7 @@ start-eatherly
 start-eatherly
 0
 1
-0.1
+0.0
 0.01
 1
 NIL
@@ -585,7 +657,7 @@ start-Joss-5%
 start-Joss-5%
 0
 1
-0.1
+0.0
 0.01
 1
 NIL
@@ -594,13 +666,13 @@ HORIZONTAL
 SLIDER
 850
 400
-1027
+1025
 433
 start-Pavlov
 start-Pavlov
 0
 1
-0.1
+0.06
 0.01
 1
 NIL

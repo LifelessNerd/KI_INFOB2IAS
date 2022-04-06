@@ -7,8 +7,7 @@ patches-own [strategy neighborhood]
 
 to setup
 
-set payoff-matrix (list (list CC-payoff-reward CD-payoff-sucker) (list DC-payoff-temptation DD-payoff-punishment))
-  ;; CC-payoff-reward etc. zijn of 0 of 1 (dichotoom).
+set payoff-matrix (list (list CC-payoff-reward    CD-payoff-sucker    ) (list DC-payoff-temptation DD-payoff-punishment))
 
   ask patches [
   ;; if pcolor = red [ ask neighbors]

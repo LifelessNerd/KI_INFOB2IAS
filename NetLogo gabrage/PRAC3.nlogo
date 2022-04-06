@@ -1,6 +1,8 @@
 globals [strategy-colors strategies colors indices payoff-matrix]
 patches-own [strategy neighborhood]
 
+;;methode voor kleurverandering moet nog geschreven worden
+
 ;; mean-total-payoff: gemiddelde payoff over acht buren per episode bij te houden.
 ;; let mean-total-payoff int
 ;; set mean-total-payoff

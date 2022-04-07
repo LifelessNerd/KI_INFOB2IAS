@@ -1,4 +1,4 @@
-globals [strategy-colors strategies colors indices payoff-matrix sum-of-strategies mean-total-payoff proportions]
+globals [strategy-colors strategies colors indices payoff-matrix sum-of-strategies mean-total-payoff proportions score-table]
 patches-own [strategy neighborhood]
 
 ;;methode voor kleurverandering moet nog geschreven worden
@@ -8,13 +8,11 @@ patches-own [strategy neighborhood]
 ;; set mean-total-payoff
 
 to setup
-clear-output clear-all-plots reset-ticks
+  clear-output clear-all-plots reset-ticks
 
-set payoff-matrix (list (list CC-payoff-reward CD-payoff-sucker) (list DC-payoff-temptation DD-payoff-punishment))
+  set payoff-matrix (list (list CC-payoff-reward CD-payoff-sucker) (list DC-payoff-temptation DD-payoff-punishment))
   ;; CC-payoff-reward etc. zijn of 0 of 1 (dichotoom); of toch niet, allemaal onvoldoende
 
-  ask patches [
-  ;; if pcolor = red [ ask neighbors]
 
   ;;Koppeling tussen strategienaam en index voor strategie
   set indices [
@@ -52,8 +50,9 @@ set payoff-matrix (list (list CC-payoff-reward CD-payoff-sucker) (list DC-payoff
   set colors map [ [x] -> item 1 x ] strategy-colors ; strip colors     from strategy-colors
   set indices n-values length strategies [ [x] -> x ] ; was ooit [x]
 
-  ]
-  ;Draft om alle patches een strategie te geven op basis van sliders
+  score-table-creator
+  ; weet niet echt waar dit moet, maar ergens moet die tabel berekend worden
+  ;--VANAF HIER WORDT DE RUN 'GEINITIALISEERD', IAS WEBSITE GEBRUIKT EEN REPORTER: initialize-run, WIJ HEBBEN GEWOON ALLES IN DE SETUP GEZET (is prima i guess?)
 
   normalize-strategy-ratios
 
@@ -78,9 +77,9 @@ foreach indices [ [i] ->
   set-plot-pen-color item i colors
 ]
 
-
-
 ;set neighborhood (patch-set self neighbors) ; levert een set van de acht buren en zichzelf
+  ask patches [ set neighborhood (patch-set self neighbors) ]
+
 end
 
 to-report rijtje [ x n ] ; e.g., rijtje 7 5 yields [7 7 7 7 7]
@@ -101,23 +100,27 @@ to recalc
 
 end
 
-;to go
-;
-;
-;  ;;hier volgt de mainloop die de gemiddelde pay-off berekent van spelen tegen de buren, deze pay-off wordt opgehaald in de score tabel
-;
-;  ask patches [
-;    set mean-total-payoff
-;      mean [
-;        item strategy item ([ strategy ] of myself) score-table
-;      ] of neighborhood
-;  ]
-;  ask patches
-;  [
-;    tick
-;  do-plots
-;  ]
-;end
+to go
+  ask patches [
+    ; determine mean payoff over eight neighbors by asking them to look up in the global
+    ; score-table to see what YOU (proponent patch) would earn by playing against them
+    set mean-total-payoff ; a patch variable
+      mean [
+        item strategy item ([ strategy ] of myself) score-table
+      ] of neighbors
+  ]
+  ask patches [
+    ; let winner be one of patches in neighborhood with highest mean total payoff
+    ; set strategy to strategy of winner; color with new strategy
+    ; ...
+
+
+
+
+  ]
+  tick
+  do-plots ; it is customary to plot /after/ ticks
+end
 
 
 
@@ -131,10 +134,9 @@ to do-plots
   ; plot strategy proportions
 end
 
-to-report score-table-creator
-
+to score-table-creator
 ;; Een score-tabel bestaat uit een lijst van lijsten
-let score-table map [ [s] -> score-row-for s ] strategies
+set score-table map [ [s] -> score-row-for s ] strategies
 end
 
 to-report score-row-for [ s1 ]
@@ -173,11 +175,48 @@ to-report random-action
 end
 to-report play-randomly [ my-history your-history ]
   report random 1
+  print my-history
+  print your-history
 end
 to-report always-cooperate [ my-history your-history ]
   report 0
 end
+to-report always-defect [ my-history your-history ]
+  report 1
+end
+to-report unforgiving [ my-history your-history ]
+  ifelse member? 1 your-history [
+    report 1
+  ]
+  [
+    report 0
+  ]
 
+end
+to-report tit-for-tat [ my-history your-history ]
+  report 1
+end
+to-report tit-for-two-tats [ my-history your-history ]
+  report 1
+end
+to-report pessimistic-tit-for-tat [ my-history your-history ]
+  report 1
+end
+to-report forgiving-tit-for-tat [ my-history your-history ]
+  report 1
+end
+to-report majority [ my-history your-history ]
+  report 1
+end
+to-report eatherly [ my-history your-history ]
+  report 1
+end
+to-report Joss-5% [ my-history your-history ]
+  report 1
+end
+to-report Pavlov [ my-history your-history ]
+  report 1
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 230
@@ -275,7 +314,7 @@ restarts
 restarts
 0
 100
-50.0
+51.0
 1
 1
 NIL
@@ -290,7 +329,7 @@ rounds
 rounds
 0
 1000
-50.0
+56.0
 1
 1
 NIL
@@ -507,7 +546,7 @@ start-always-cooperate
 start-always-cooperate
 0
 1
-0.46
+0.02
 0.01
 1
 NIL
@@ -522,7 +561,7 @@ start-always-defect
 start-always-defect
 0
 1
-0.0
+0.02
 0.01
 1
 NIL
@@ -537,7 +576,7 @@ start-play-randomly
 start-play-randomly
 0
 1
-0.37
+0.27
 0.01
 1
 NIL
@@ -552,7 +591,7 @@ start-unforgiving
 start-unforgiving
 0
 1
-0.06
+0.05
 0.01
 1
 NIL
@@ -567,7 +606,7 @@ start-tit-for-tat
 start-tit-for-tat
 0
 1
-0.0
+0.07
 0.01
 1
 NIL
@@ -582,7 +621,7 @@ start-tit-for-two-tats
 start-tit-for-two-tats
 0
 1
-0.06
+0.05
 0.01
 1
 NIL
@@ -597,7 +636,7 @@ start-pessimistic-tit-for-tat
 start-pessimistic-tit-for-tat
 0
 1
-0.0
+0.08
 0.01
 1
 NIL
@@ -612,7 +651,7 @@ start-forgiving-tit-for-tat
 start-forgiving-tit-for-tat
 0
 1
-0.0
+0.07
 0.01
 1
 NIL
@@ -627,7 +666,7 @@ start-majority
 start-majority
 0
 1
-0.0
+0.08
 0.01
 1
 NIL
@@ -642,7 +681,7 @@ start-eatherly
 start-eatherly
 0
 1
-0.0
+0.08
 0.01
 1
 NIL
@@ -657,7 +696,7 @@ start-Joss-5%
 start-Joss-5%
 0
 1
-0.0
+0.11
 0.01
 1
 NIL
@@ -672,7 +711,7 @@ start-Pavlov
 start-Pavlov
 0
 1
-0.06
+0.11
 0.01
 1
 NIL

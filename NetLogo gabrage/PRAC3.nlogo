@@ -8,9 +8,6 @@ to setup
   ;;Hier wordt de opzet van het programma klaargemaakt, de strategien worden gekoppeld aan indexen en kleuren.
   clear-output clear-all-plots reset-ticks
 
-  set payoff-matrix (list (list CC-payoff-reward CD-payoff-sucker) (list DC-payoff-temptation DD-payoff-punishment))
-  ;; CC-payoff-reward etc. zijn of 0 of 1 (dichotoom);
-
   ;;Koppeling tussen strategienaam en index voor strategie
   set indices [
   ["always-cooperate" 1]
@@ -32,70 +29,39 @@ to setup
   ["Pavlov" brown]
     ]
 
+    ;set neighborhood (patch-set self neighbors) ; levert een set van de acht buren en zichzelf
+  ask patches [ set neighborhood (patch-set self neighbors) ]
+
   ;; zorgt dat namen en kleuren van elkaar los gestript worden
   set strategies map [ [x] -> item 0 x ] strategy-colors
   set colors map [ [x] -> item 1 x ] strategy-colors
   set indices n-values length strategies [ [x] -> x ]
 
-   ;;Score-tabel aanmaken
+  recalc ;;Gaat naar een reporter die een heleboel andere reporters aanroept om zo een score-tabel te maken
+
+  normalize-strategy-ratios ;;Methode-aanroep, zie verderop
+
+  reset-colors ;;Geen nieuwe berekeningen; enkel een nieuw speelveld op basis van sliders
+
+end
+
+to recalc
+
+  set payoff-matrix (list (list CC-payoff-reward CD-payoff-sucker) (list DC-payoff-temptation DD-payoff-punishment))
+  ;; Payoff matrix wordt gecodeert zodat netlogo er iets mee kan;
+
+  ;;Score-tabel aanmaken
   set score-table map [ [s] -> score-row-for s ] strategies
 
-  ;;Methode-aanroep, zie verderop
-  normalize-strategy-ratios
-
-  let strategy-bag map [ [i] -> rijtje i (1000 * run-result (word "start-" item i strategies)) ] indices
-; strategy-bag now looks like [[0 0 0 ...] [1 1 ...] [2 2 2 2 2 ...] ...]
-; the length of each sub-list corresponds to the start-proportion of that strategy
-
-let strategy-pool reduce [ [x y] -> sentence x y ] strategy-bag
-; strategy-pool now looks like [0 0 0 ... 1 1 ... 2 2 2 2 2 ... ...]
-; and contains about 1000 indices
-
-;;hier worden de strategien verdeeld over het speelveld volgens de vooraf ingestelde verhoudingen die vastgelegd zijn in de strategy-pool.
-ask patches [
- set strategy one-of strategy-pool  ; "strategy" is a natural number; "one-of" is a Netlogo primitive
- set pcolor item strategy colors    ; give patch the color of the strategy it it assigned to
-]
-
-; creert de plotpennen per strategie met de corresponderende kleur
-foreach indices [ [i] ->
-  create-temporary-plot-pen item i strategies
-  set-plot-pen-color item i colors
-]
-  ;plot setup
-  foreach indices [ [i] ->
-  create-temporary-plot-pen item i strategies
-  set-plot-pen-color item i colors]
-
-  ;set neighborhood (patch-set self neighbors) ; levert een set van de acht buren en zichzelf
-  ask patches [ set neighborhood (patch-set self neighbors) ]
-end
-
-  ;;maakt een lijst met daarin inhoud x en lengte n. Methode wordt een aantal keer aangeroepen omdat hier de scoremap uiteindelijk wordt ingeplaatst.
-to-report rijtje [ x n ] ; e.g., rijtje 7 5 yields [7 7 7 7 7]
-  report n-values n [ x ]
-end
-
- ;;controleert of de start-proporties wel optellen tot 1 en anders te normaliseren zodat de verhoudingen gelijk blijven en ze tezamen het hele veld dekken.
-to normalize-strategy-ratios
-  set sum-of-strategies sum map [ [s] -> run-result (word "start-" s) ] strategies
-  if abs(sum-of-strategies - 1) <= 0.001 [ stop ] ; already normalized
-  foreach strategies [ [s] ->
-    run (word "set start-" s " precision (start-" s " / sum-of-strategies) 2")
-  ]
-end
-
-to reset
-  ;; bij een reset wordt alles gecleared en de patches zwart.
-  clear-output clear-all-plots reset-ticks
-  ask patches [set pcolor black]
 end
 
 to-report score-row-for [ s1 ]
+  ;;Het plaatsen van de entries (nog leeg) voor de strategieen tegenover andere strategieen
   report map [ [s2] -> score-entry-for s1 s2 ] strategies
 end
 
 to-report score-entry-for [ s1 s2 ]
+  ;;Doordat er meerdere episoden kunnen zijn het gemiddelde van die rondes pakken om ruis te kunnen gebruiken
   report mean n-values restarts [ score-for s1 s2 ]
 end
 
@@ -112,12 +78,61 @@ to-report score-for [ s1 s2 ]
     set your-history     fput your-action your-history
   ]
   report my-total-payoff
+  ;;Geschiedenis en variabelen van de patch introduceren voor later
 end
 
 to-report play [ some-strategy my-history your-history ]
   report ifelse-value (random-float 1.0 < noise) [
     random-action ] [ runresult (word some-strategy " my-history your-history") ]
+  ;;In het geval van noise een willekeurige actie spelen ipv de strategie
 end
+
+
+
+to reset-colors
+
+  clear-plot
+  ;;plot clearen
+
+  ; creert de plotpennen per strategie met de corresponderende kleur
+foreach indices [ [i] ->
+  create-temporary-plot-pen item i strategies
+  set-plot-pen-color item i colors
+]
+  ;plot setup
+  foreach indices [ [i] ->
+  create-temporary-plot-pen item i strategies
+  set-plot-pen-color item i colors]
+
+    let strategy-bag map [ [i] -> rijtje i (1000 * run-result (word "start-" item i strategies)) ] indices
+; strategy-bag now looks like [[0 0 0 ...] [1 1 ...] [2 2 2 2 2 ...] ...]
+; the length of each sub-list corresponds to the start-proportion of that strategy
+
+let strategy-pool reduce [ [x y] -> sentence x y ] strategy-bag
+; strategy-pool now looks like [0 0 0 ... 1 1 ... 2 2 2 2 2 ... ...]
+; and contains about 1000 indices
+
+  ;;hier worden de strategien verdeeld over het speelveld volgens de vooraf ingestelde verhoudingen die vastgelegd zijn in de strategy-pool.
+ask patches [
+ set strategy one-of strategy-pool  ; "strategy" is a natural number; "one-of" is a Netlogo primitive
+ set pcolor item strategy colors    ; give patch the color of the strategy it it assigned to
+]
+end
+
+  ;;maakt een lijst met daarin inhoud x en lengte n. Methode wordt een aantal keer aangeroepen omdat hier de scoremap uiteindelijk wordt ingeplaatst.
+to-report rijtje [ x n ] ; e.g., rijtje 7 5 yields [7 7 7 7 7]
+  report n-values n [ x ]
+end
+
+ ;;controleert of de start-proporties wel optellen tot 1 en anders te normaliseren zodat de verhoudingen gelijk blijven en ze tezamen het hele veld dekken.
+to normalize-strategy-ratios
+  set sum-of-strategies sum map [ [s] -> run-result (word "start-" s) ] strategies
+  if abs(sum-of-strategies - 1) <= 0.001 [ stop ] ; already normalized
+  foreach strategies [ [s] ->
+    run (word "set start-" s " precision (start-" s " / sum-of-strategies) 2")
+  ]
+end
+
 
 to-report random-action
   report random 1
@@ -241,11 +256,11 @@ end
 GRAPHICS-WINDOW
 229
 13
-642
-427
+698
+483
 -1
 -1
-3.35
+3.81
 1
 10
 1
@@ -284,9 +299,9 @@ NIL
 
 SLIDER
 50
-85
+60
 222
-118
+93
 restarts
 restarts
 0
@@ -299,9 +314,9 @@ HORIZONTAL
 
 SLIDER
 50
-120
+100
 222
-153
+133
 rounds
 rounds
 0
@@ -314,9 +329,9 @@ HORIZONTAL
 
 SLIDER
 50
-155
+140
 222
-188
+173
 noise
 noise
 0
@@ -328,12 +343,12 @@ NIL
 HORIZONTAL
 
 BUTTON
-161
-16
-224
-49
-stop
+160
+15
+225
+48
 reset
+reset-colors
 NIL
 1
 T
@@ -345,10 +360,10 @@ NIL
 1
 
 BUTTON
-95
-190
-156
-224
+80
+185
+141
+219
 NIL
 go
 T
@@ -362,10 +377,10 @@ NIL
 1
 
 BUTTON
-160
-190
-223
-223
+145
+185
+208
+218
 step
 go
 NIL
@@ -387,7 +402,7 @@ CC-payoff-reward
 CC-payoff-reward
 0
 5
-1.0
+3.0
 1
 1
 NIL
@@ -417,7 +432,7 @@ DC-payoff-temptation
 DC-payoff-temptation
 0
 5
-1.8
+5.0
 1
 1
 NIL
@@ -432,16 +447,16 @@ DD-payoff-punishment
 DD-payoff-punishment
 0
 5
-0.0
+1.0
 1
 1
 NIL
 HORIZONTAL
 
 PLOT
-670
+710
 10
-1350
+1215
 220
 Proportions
 NIL
@@ -456,109 +471,49 @@ true
 PENS
 
 OUTPUT
-1030
-225
-1350
-435
-11
+895
+230
+1215
+485
+16
 
 SLIDER
-670
-260
-847
-293
+710
+265
+887
+298
 start-always-cooperate
 start-always-cooperate
 0
 1
-0.15
+0.1
 0.01
 1
 NIL
 HORIZONTAL
 
 SLIDER
-670
-225
-847
-258
+710
+230
+887
+263
 start-always-defect
 start-always-defect
 0
 1
-0.13
+0.25
 0.01
 1
 NIL
 HORIZONTAL
 
 SLIDER
-670
-295
-847
-328
+710
+300
+887
+333
 start-play-randomly
 start-play-randomly
-0
-1
-0.17
-0.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-670
-330
-847
-363
-start-unforgiving
-start-unforgiving
-0
-1
-0.15
-0.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-670
-365
-847
-398
-start-tit-for-tat
-start-tit-for-tat
-0
-1
-0.18
-0.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-851
-226
-1026
-259
-start-tit-for-two-tats
-start-tit-for-two-tats
-0
-1
-0.03
-0.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-672
-403
-847
-436
-start-Pavlov
-start-Pavlov
 0
 1
 0.2
@@ -566,6 +521,83 @@ start-Pavlov
 1
 NIL
 HORIZONTAL
+
+SLIDER
+710
+335
+887
+368
+start-unforgiving
+start-unforgiving
+0
+1
+0.3
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+710
+370
+887
+403
+start-tit-for-tat
+start-tit-for-tat
+0
+1
+0.1
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+710
+440
+890
+473
+start-tit-for-two-tats
+start-tit-for-two-tats
+0
+1
+0.1
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+710
+405
+890
+438
+start-Pavlov
+start-Pavlov
+0
+1
+0.1
+0.01
+1
+NIL
+HORIZONTAL
+
+BUTTON
+160
+370
+222
+403
+recalc
+recalc
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 # Spacially Strategic Iterated Evolutionary Prisoners Dilemma
@@ -584,7 +616,7 @@ Hoe veel 'beloning' hij zou krijgen, zou hij de volgende stap zo in gaan. De str
 
 ## HOE TE GEBRUIKEN?
 Verander allereerst de parameters.
-### Sliders
+### SLIDERS
 Hier een uitleg over alle sliders:
 **_restarts_** De hoeveelheid restarts heeft invloed op hoevaak de score-tabel berekend wordt.
 **_rounds_** De hoeveelheid ronden heeft invloed op hoevaak een cel de beloning van de buren uitrekend (deze worden allemaal bij elkaar opgeteld) om vervolgens een beslissing te maken.
@@ -594,6 +626,19 @@ Hier een uitleg over alle sliders:
 **_DC-payoff-temptation_** Idem.
 **_DD-payoff-punishment_** Idem.
 (Voor verdere uitleg van de verschillende payoffs, zie de wikipedia-link)
+
+Verder zijn er verschillende strategieën beschikbaar. Met de sliders kan met proporties aangeven. De waarden worden automatisch genormaliseerd.
+
+**EXTRA FEATURE**
+Een extra strategie 'tit for two tats' is aangebracht. Deze strategie zorgt ervoor dat, als twee tit-for-two-tats tegen elkaar spelen, ze niet in een oneindige loop van verzaken terecht komen, wat wel gebeurt bij een simpele tit-for-tat.
+
+### DE KNOPPEN
+Met **setup** wordt het speelveld geladen volgens de door jouw ingestelde sliders. Ook wordt de score-tabel in de achtergrond geladen met de door jouw ingestelde sliders.
+
+De knoppen **go** en **step** doen beide hetzelfde, enkel is **go** een button die je zelf weer uit moeten zetten, en is **step** eentje die een enkele stap/tick doet.
+
+### DE OUTPUT
+Er is een grafiek die de proporties van alle mogelijke strategieën laat zien. De output-window laat absolute getallen zien van enkel de aanwezige strategieën in het veld.
 @#$#@#$#@
 default
 true

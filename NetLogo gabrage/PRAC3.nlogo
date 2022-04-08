@@ -144,9 +144,6 @@ to go
   ]
 
   ask patches [
-    ; let winner be one of patches in neighborhood with highest mean total payoff
-    ; set strategy to strategy of winner; color with new strategy
-    ; ...
     let neighborslist []
     ask neighborhood [
 
@@ -176,24 +173,11 @@ to do-plots
   let indices-sorted-by-proportion sort-by [ [f1 f2] -> item f1 frequencies > item f2 frequencies ] filtered-indices
   print indices-sorted-by-proportion
 
-  ;;let outputstring
-  ;;word
-  foreach indices-sorted-by-proportion
-  item indices-sorted-by-proportion proportions
-  item indices-sorted-by-proportion strategies
+  let outputstring ""
 
-
- ;; word
-
-  ; clear output widget and print new ranking
-  ; plot strategy proportions
-
-  ;;let sorted-strategies sort-by [indices-sorted-by-proportion] strategies
-  ;;output-write sorted-strategies
-  ;;set outputlist map [[item i strategies] -> item i proportions] filtered-indices
-
-  ;set outputlist
-  ;;output-write outputlist
+  foreach indices-sorted-by-proportion [
+    [index] -> output-print (word item index frequencies " " item index strategies)
+  ]
 
   foreach indices [ [i] ->
   set-current-plot-pen item i strategies
@@ -290,11 +274,11 @@ end
 GRAPHICS-WINDOW
 229
 13
-578
-363
+642
+427
 -1
 -1
-2.82
+3.35
 1
 10
 1
@@ -634,41 +618,32 @@ NIL
 1
 
 @#$#@#$#@
-## WHAT IS IT?
+# Spacially Strategic Iterated Evolutionary Prisoners Dilemma
+#### JESSE WIJLHUIZEN & LUKA DE VRIJ
 
-(a general understanding of what the model is trying to show or explain)
+## WAT IS HET?
 
-## HOW IT WORKS
+Dit model laat een zg. 'Spacially Strategic Iterated Evolutionary Prisoners Dilemma' (oftwel SSIEPD) zien. Hierbij speelt elke cel (patch/tile) een iterated prisoners dillema met zijn omgeving. Voor meer info rondom het prisoners dilemma zelf:
+ https://en.wikipedia.org/wiki/Prisoners_dilemma#Generalized_form.
 
-(what rules the agents use to create the overall behavior of the model)
+## HOE WERKT HET?
 
-## HOW TO USE IT
+Elke cel bevat een strategie, deze zijn weergegeven met kleuren, die af te lezen zijn in de grafiek. Verschillende strategieën presteren verschillend tegenover elkaar. 
+Tijdens een stap kijkt elke cel om zich heen. Hij ziet zijn 8 buren, en zichzelf. Uit deze omgeving bekijkt de cel welke buurman-cel het succesvolste is in zijn omgeving. Dat wil zeggen: 
+Hoe veel 'beloning' hij zou krijgen, zou hij de volgende stap zo in gaan. De strategie van deze succesvolste cel in de omgeving wordt overgenomen. Hierna wordt er een nieuwe stap gezet.
 
-(how to use the model, including a description of each of the items in the Interface tab)
-
-## THINGS TO NOTICE
-
-(suggested things for the user to notice while running the model)
-
-## THINGS TO TRY
-
-(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
-
-## EXTENDING THE MODEL
-
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
-
-## NETLOGO FEATURES
-
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
-
-## RELATED MODELS
-
-(models in the NetLogo Models Library and elsewhere which are of related interest)
-
-## CREDITS AND REFERENCES
-
-(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
+## HOE TE GEBRUIKEN?
+Verander allereerst de parameters.
+### Sliders
+Hier een uitleg over alle sliders:
+**_restarts_** De hoeveelheid restarts heeft invloed op hoevaak de score-tabel berekend wordt.
+**_rounds_** De hoeveelheid ronden heeft invloed op hoevaak een cel de beloning van de buren uitrekend (deze worden allemaal bij elkaar opgeteld) om vervolgens een beslissing te maken.
+**_noise_** Hoevaak de cellen, tegen hun strategie in, iets willekeurigs doen.
+**_CC-payoff-reward_** Hoeveel 'beloning' een cel zou krijgen als men de reward optie zou krijgen.
+**_CD-payoff-sucker_** Idem, maar dan met de sucker reward.
+**_DC-payoff-temptation_** Idem.
+**_DD-payoff-punishment_** Idem.
+(Voor verdere uitleg van de verschillende payoffs, zie de wikipedia-link)
 @#$#@#$#@
 default
 true

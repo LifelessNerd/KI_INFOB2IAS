@@ -22,12 +22,7 @@ to setup
   [" play randomly" 3]
   ["unforgiving" 4]
   ["tit for tat" 5]
-  ["pessimistic tit for tat" 6]
-  ["forgiving tit for tat" 7]
   ["tit for two tats" 8]
-  ["majority" 9]
-  ["eatherly" 10]
-  ["Joss 5%" 11]
   ["Pavlov" 12]]
 
 
@@ -38,12 +33,7 @@ to setup
   ["play-randomly" gray]
   ["unforgiving" 102]
   ["tit-for-tat" violet]
-  ["pessimistic-tit-for-tat" magenta]
-  ["forgiving-tit-for-tat" 13]
   ["tit-for-two-tats" 23]
-  ["majority" pink]
-  ["eatherly" blue]
-  ["Joss-5%" orange]
   ["Pavlov" brown]
     ]
 
@@ -95,7 +85,7 @@ to normalize-strategy-ratios
   ]
 end
 
-to recalc
+to reset
   clear-output clear-all-plots reset-ticks
   ask patches [set pcolor black]
 
@@ -109,7 +99,7 @@ to go
       mean [
         item strategy item ([ strategy ] of myself) score-table
       ] of neighbors
-    ;print mean-total-payoff
+
   ]
   ask patches [
     let neighborslist [mean-total-payoff] of neighbors ;;Misschien dat hij zichzelf niet meeneemt?
@@ -171,16 +161,15 @@ to-report play [ some-strategy my-history your-history ]
     random-action ] [ runresult (word some-strategy " my-history your-history") ]
 end
 
-
-;;Hier volgen de verschillende strategien
 to-report random-action
   report random 1
 end
+
+;;Hier volgen de verschillende strategien
 to-report play-randomly [ my-history your-history ]
   ;; speelt random een 0 (cooperate) of 1 (defect)
   report random 1
-  print my-history
-  print your-history
+
 end
 to-report always-cooperate [ my-history your-history ]
   ;; speelt altijd een 0 (cooperate)
@@ -202,7 +191,7 @@ to-report unforgiving [ my-history your-history ]
 end
 to-report tit-for-tat [ my-history your-history ]
    ;;kijkt naar de laatste actie van de tegenspeler en neemt die over. Als de lijst nog leeg is coperatie
-  if your-history empty? [report 0]
+  if empty? your-history [report 0]
   report (item 0 your-history)
 
 end
@@ -211,35 +200,19 @@ to-report tit-for-two-tats [ my-history your-history ]
     ifelse (length your-history) < 2
   [
     ;;als er geen twee voorgaande rondes zijn geweest zal de tit-for-tat procedure uitgevoerd worden
-    if your-history empty? [report 0]
+    if empty? your-history [report 0]
   report (item 0 your-history)
   ]
   [
     ;;als er twee keer gedefect is, zal er gedefect worden. Als er dus minimaal 1 keer is samengewerkt in de afgelopen twee beurten zal er samengewerkt
-    ifelse (item 0 your-history) and (item 1 your-history) = 1
+    ifelse (item 0 your-history = item 0 my-history)
     [report 1]
     [report 0]
   ]
 end
 
-;to-report pessimistic-tit-for-tat [ my-history your-history ]
-;  report 1
-;end
-;to-report forgiving-tit-for-tat [ my-history your-history ]
-;  report 1
-;end
-;to-report majority [ my-history your-history ]
-;  report 1
-;end
-;to-report eatherly [ my-history your-history ]
-;  report 1
-;end
-;to-report Joss-5% [ my-history your-history ]
-;  report 1
-;end
-
 to-report Pavlov [ my-history your-history ]
-
+  ;;
    ifelse (my-history = your-history)
     [
       report 0
@@ -276,17 +249,6 @@ GRAPHICS-WINDOW
 ticks
 30.0
 
-SWITCH
-0
-15
-90
-48
-pit?
-pit?
-1
-1
--1000
-
 BUTTON
 95
 15
@@ -303,38 +265,6 @@ NIL
 NIL
 NIL
 1
-
-BUTTON
-160
-15
-222
-48
-NIL
-recalc
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-SLIDER
-50
-50
-222
-83
-strategies-to-pit
-strategies-to-pit
-1
-15
-6.0
-1
-1
-NIL
-HORIZONTAL
 
 SLIDER
 50
@@ -360,7 +290,7 @@ rounds
 rounds
 0
 1000
-56.0
+516.0
 1
 1
 NIL
@@ -382,10 +312,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-30
-190
-93
-223
+161
+16
+224
+49
 NIL
 reset
 NIL
@@ -492,57 +422,6 @@ DD-payoff-punishment
 NIL
 HORIZONTAL
 
-BUTTON
-30
-365
-90
-398
-NIL
-strategy
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-167
-365
-222
-398
-NIL
-payoff
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-90
-365
-165
-398
-NIL
-cooperation
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 PLOT
 670
 10
@@ -577,7 +456,7 @@ start-always-cooperate
 start-always-cooperate
 0
 1
-0.02
+0.03
 0.01
 1
 NIL
@@ -592,7 +471,7 @@ start-always-defect
 start-always-defect
 0
 1
-0.02
+0.03
 0.01
 1
 NIL
@@ -607,7 +486,7 @@ start-play-randomly
 start-play-randomly
 0
 1
-0.27
+0.46
 0.01
 1
 NIL
@@ -622,7 +501,7 @@ start-unforgiving
 start-unforgiving
 0
 1
-0.05
+0.08
 0.01
 1
 NIL
@@ -637,36 +516,21 @@ start-tit-for-tat
 start-tit-for-tat
 0
 1
-0.07
+0.12
 0.01
 1
 NIL
 HORIZONTAL
 
 SLIDER
-670
-400
-845
-433
+851
+226
+1026
+259
 start-tit-for-two-tats
 start-tit-for-two-tats
 0
 1
-0.05
-0.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-850
-225
-1027
-258
-start-pessimistic-tit-for-tat
-start-pessimistic-tit-for-tat
-0
-1
 0.08
 0.01
 1
@@ -674,75 +538,15 @@ NIL
 HORIZONTAL
 
 SLIDER
-850
-260
-1027
-293
-start-forgiving-tit-for-tat
-start-forgiving-tit-for-tat
-0
-1
-0.07
-0.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-850
-295
-1027
-328
-start-majority
-start-majority
-0
-1
-0.08
-0.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-850
-330
-1027
-363
-start-eatherly
-start-eatherly
-0
-1
-0.08
-0.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-850
-365
-1027
-398
-start-Joss-5%
-start-Joss-5%
-0
-1
-0.11
-0.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-850
-400
-1025
-433
+672
+403
+847
+436
 start-Pavlov
 start-Pavlov
 0
 1
-0.11
+0.19
 0.01
 1
 NIL

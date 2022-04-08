@@ -231,7 +231,6 @@ end
 
 to-report Pavlov [ my-history your-history ]
 
-  empty?
 
    let times_pavlov times_pavlov + 1
   ifelse times_pavlov > 1

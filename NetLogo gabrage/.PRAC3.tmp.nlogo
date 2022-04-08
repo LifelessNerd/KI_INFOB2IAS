@@ -239,7 +239,7 @@ end
 ;end
 
 to-report Pavlov [ my-history your-history ]
-  ;;
+
    ifelse (my-history = your-history)
     [
       report 0

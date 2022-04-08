@@ -109,14 +109,16 @@ to go
       mean [
         item strategy item ([ strategy ] of myself) score-table
       ] of neighbors
+    ;print mean-total-payoff
   ]
   ask patches [
-    ; let winner be one of patches in neighborhood with highest mean total payoff
-    ; set strategy to strategy of winner; color with new strategy
-    ; ...
-
-
-
+    let neighborslist [mean-total-payoff] of neighbors ;;Misschien dat hij zichzelf niet meeneemt?
+    set neighborslist lput [mean-total-payoff] of self neighborslist
+    let winner one-of neighbors with [mean-total-payoff = max neighborslist]
+    print neighborslist
+    ;Zet eigen patch naar winner's strategy
+    set strategy [strategy] of winner
+    set pcolor [pcolor] of winner
 
   ]
   tick
@@ -231,7 +233,6 @@ end
 
 to-report Pavlov [ my-history your-history ]
 
-  empty?
 
    let times_pavlov times_pavlov + 1
   ifelse times_pavlov > 1

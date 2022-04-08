@@ -237,6 +237,7 @@ to-report Pavlov [ my-history your-history ]
     ]
   ]
 end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 229
@@ -566,6 +567,23 @@ start-Pavlov
 1
 NIL
 HORIZONTAL
+
+BUTTON
+115
+417
+222
+451
+Perzisch tapijt
+persian
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 # Spacially Strategic Iterated Evolutionary Prisoners Dilemma

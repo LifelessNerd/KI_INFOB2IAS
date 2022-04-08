@@ -204,6 +204,7 @@ to-report tit-for-two-tats [ my-history your-history ]
   report 1
   [
     ;;Cooperate if opponent has cooperated in at least one of previous two interactions.
+
   ]
 
 end

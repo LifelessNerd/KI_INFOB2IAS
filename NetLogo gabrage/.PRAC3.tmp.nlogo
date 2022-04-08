@@ -180,7 +180,7 @@ to do-plots
   ;;word
   foreach indices-sorted-by-proportion
   item indices-sorted-by-proportion proportions
-  item indices-sorted-by-proportion strategies
+item indices-sorted-by-proportion strategies
 
 
  ;; word

@@ -1,12 +1,7 @@
 ;; http://ccl.northwestern.edu/netlogo/models/community/Prisoner's%20dilemma%203_0
-globals [strategy-colors strategies colors indices payoff-matrix sum-of-strategies mean-total-payoff proportions score-table]
+globals [strategy-colors strategies colors indices payoff-matrix sum-of-strategies mean-total-payoff proportions score-table ]
 patches-own [strategy neighborhood]
 
-;;methode voor kleurverandering moet nog geschreven worden
-
-;; mean-total-payoff: gemiddelde payoff over acht buren per episode bij te houden.
-;; let mean-total-payoff int
-;; set mean-total-payoff
 
 to setup
   clear-output clear-all-plots reset-ticks
@@ -22,8 +17,8 @@ to setup
   [" play randomly" 3]
   ["unforgiving" 4]
   ["tit for tat" 5]
-  ["tit for two tats" 8]
-  ["Pavlov" 12]]
+  ["tit for two tats" 6]
+  ["Pavlov" 7]]
 
 
   ;Kleur toekennen aan verschillende strategiën
@@ -39,11 +34,14 @@ to setup
 
   set strategies map [ [x] -> item 0 x ] strategy-colors ; strip strategies from strategy-colors
   set colors map [ [x] -> item 1 x ] strategy-colors ; strip colors     from strategy-colors
-  set indices n-values length strategies [ [x] -> x ] ; was ooit [x]
+  set indices n-values length strategies [ [x] -> x ] ;
 
-  score-table-creator
+
   ; weet niet echt waar dit moet, maar ergens moet die tabel berekend worden
   ;--VANAF HIER WORDT DE RUN 'GEINITIALISEERD', IAS WEBSITE GEBRUIKT EEN REPORTER: initialize-run, WIJ HEBBEN GEWOON ALLES IN DE SETUP GEZET (is prima i guess?)
+
+  set score-table map [ [s] -> score-row-for s ] strategies
+  ;;Score-tabel aanmaken
 
   normalize-strategy-ratios
 
@@ -71,6 +69,11 @@ foreach indices [ [i] ->
 ;set neighborhood (patch-set self neighbors) ; levert een set van de acht buren en zichzelf
   ask patches [ set neighborhood (patch-set self neighbors) ]
 
+  ;plot setup
+  foreach indices [ [i] ->
+  create-temporary-plot-pen item i strategies
+  set-plot-pen-color item i colors]
+
 end
 
 to-report rijtje [ x n ] ; e.g., rijtje 7 5 yields [7 7 7 7 7]
@@ -91,48 +94,10 @@ to reset
 
 end
 
-to go
-  ask patches [
-    ; determine mean payoff over eight neighbors by asking them to look up in the global
-    ; score-table to see what YOU (proponent patch) would earn by playing against them
-    set mean-total-payoff ; a patch variable
-      mean [
-        item strategy item ([ strategy ] of myself) score-table
-      ] of neighbors
-  ]
-  ask patches [
-    let neighborslist [mean-total-payoff] of neighbors ;;Misschien dat hij zichzelf niet meeneemt?
-    set neighborslist lput [mean-total-payoff] of self neighborslist
-    let winner one-of neighbors with [mean-total-payoff = max neighborslist]
-    print neighborslist
-    ;Zet eigen patch naar winner's strategy
-    set strategy [strategy] of winner
-    set pcolor [pcolor] of winner
-
-  ]
-  tick
-  do-plots ; it is customary to plot /after/ ticks
-end
-
-
-
-   ;Tekenen van het plot
-to do-plots
-  let frequencies map [ [i] -> count patches with [ strategy = i ] ] indices
-  set proportions map [ [i] -> i / count patches ] frequencies ; that's ok: count patches is an inexpensive operation
-  let filtered-indices filter [ [i] -> item i frequencies > 0 ] indices ; filter dissapeared strategies
-  let indices-sorted-by-proportion sort-by [ [f1 f2] -> item f1 frequencies > item f2 frequencies ] filtered-indices
-  ; clear output widget and print new ranking
-  ; plot strategy proportions
-end
-
-to score-table-creator
-;; Een score-tabel bestaat uit een lijst van lijsten
-set score-table map [ [s] -> score-row-for s ] strategies
-end
-
 to-report score-row-for [ s1 ]
   report map [ [s2] -> score-entry-for s1 s2 ] strategies
+
+
 
 end
 
@@ -152,7 +117,9 @@ to-report score-for [ s1 s2 ]
     set my-history       fput my-action   my-history   ; most recent actions go first
     set your-history     fput your-action your-history
   ]
+
   report my-total-payoff
+
 end
 
 to-report play [ some-strategy my-history your-history ]
@@ -163,6 +130,62 @@ end
 to-report random-action
   report random 1
 end
+
+
+
+to go
+  ask patches [
+    ; determine mean payoff over eight neighbors by asking them to look up in the global
+    ; score-table to see what YOU (proponent patch) would earn by playing against them
+    set mean-total-payoff ; a patch variable
+      mean [
+        item strategy item ([ strategy ] of myself) score-table
+      ] of neighbors
+  ]
+
+  ask patches [
+    ; let winner be one of patches in neighborhood with highest mean total payoff
+    ; set strategy to strategy of winner; color with new strategy
+    ; ...
+    let neighborslist []
+    ask neighborhood [
+
+      set neighborslist lput mean-total-payoff neighborslist
+
+     ]
+
+      let winner one-of neighborhood with [mean-total-payoff = max neighborslist]
+
+    ;Zet eigen patch naar winner's strategy
+    set strategy [strategy] of winner  ; kan ook nog fout zijn
+    set pcolor [pcolor] of winner
+  ]
+
+  print "score-table used:"
+  print score-table
+  tick
+  do-plots ; it is customary to plot /after/ ticks
+end
+
+   ;Tekenen van het plot
+to do-plots
+  let frequencies map [ [i] -> count patches with [ strategy = i ] ] indices
+  set proportions map [ [i] -> i / count patches ] frequencies ; that's ok: count patches is an inexpensive operation
+  let filtered-indices filter [ [i] -> item i frequencies > 0 ] indices ; filter dissapeared strategies
+  let indices-sorted-by-proportion sort-by [ [f1 f2] -> item f1 frequencies > item f2 frequencies ] filtered-indices
+  ; clear output widget and print new ranking
+  ; plot strategy proportions
+  write indices-sorted-by-proportion
+  foreach indices [ [i] ->
+  set-current-plot-pen item i strategies
+  plot item i (proportions)
+  ]
+
+
+end
+
+
+
 
 ;;Hier volgen de verschillende strategien
 to-report play-randomly [ my-history your-history ]
@@ -212,23 +235,49 @@ end
 
 to-report Pavlov [ my-history your-history ]
   ;;
-   ifelse (my-history = your-history)
+  ifelse empty? my-history
+  [
+    report 0
+  ]
+  [
+   ifelse (item 0 my-history = item 0 your-history)
     [
       report 0
     ]
     [
       report 1
     ]
+  ]
+end
+
+to persian
+
+  set CC-payoff-reward 1
+  set DC-payoff-temptation 1.8
+  set CD-payoff-sucker 0
+  set DD-payoff-punishment 0
+  set noise 0
+
+  ask patches [
+    set pcolor green
+    set strategy 0
+  ]
+  ask patch 60 60 [
+    set pcolor red
+    set strategy 1
+  ]
+
+
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-230
-10
-667
-448
+229
+13
+666
+451
 -1
 -1
-13.0
+2.82
 1
 10
 1
@@ -238,10 +287,10 @@ GRAPHICS-WINDOW
 1
 1
 1
--16
-16
--16
-16
+0
+120
+0
+120
 0
 0
 1
@@ -274,7 +323,7 @@ restarts
 restarts
 0
 100
-51.0
+1.0
 1
 1
 NIL
@@ -288,8 +337,8 @@ SLIDER
 rounds
 rounds
 0
-1000
-516.0
+100
+1.0
 1
 1
 NIL
@@ -304,7 +353,7 @@ noise
 noise
 0
 1
-0.27
+0.0
 0.01
 1
 NIL
@@ -315,7 +364,7 @@ BUTTON
 16
 224
 49
-NIL
+stop
 reset
 NIL
 1
@@ -330,11 +379,11 @@ NIL
 BUTTON
 95
 190
-158
-223
+156
+224
 NIL
-step
-NIL
+go
+T
 1
 T
 OBSERVER
@@ -349,7 +398,7 @@ BUTTON
 190
 223
 223
-NIL
+step
 go
 NIL
 1
@@ -370,7 +419,7 @@ CC-payoff-reward
 CC-payoff-reward
 0
 5
-0.0
+1.0
 1
 1
 NIL
@@ -400,7 +449,7 @@ DC-payoff-temptation
 DC-payoff-temptation
 0
 5
-0.0
+1.8
 1
 1
 NIL
@@ -416,7 +465,7 @@ DD-payoff-punishment
 0
 5
 0.0
-0
+1
 1
 NIL
 HORIZONTAL
@@ -430,14 +479,13 @@ Proportions
 NIL
 NIL
 0.0
-10.0
+1.0
 0.0
-10.0
+0.5
 true
-false
+true
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot count turtles"
 
 OUTPUT
 1030
@@ -550,6 +598,23 @@ start-Pavlov
 1
 NIL
 HORIZONTAL
+
+BUTTON
+115
+417
+222
+451
+Perzisch tapijt
+persian
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
